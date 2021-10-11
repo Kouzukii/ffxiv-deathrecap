@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using DeathRecap.Messages;
 
 namespace DeathRecap {
     internal record CombatEvent {
@@ -41,6 +42,7 @@ namespace DeathRecap {
             public bool Crit { get; init; }
             public bool DirectHit { get; init; }
             public DamageType DamageType { get; init; }
+            public ActionEffectDisplayType DisplayType { get; init; }
             public bool Parried { get; init; }
             public bool Blocked { get; init; }
             public ushort? Icon { get; init; }

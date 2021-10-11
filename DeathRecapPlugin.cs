@@ -47,10 +47,11 @@ namespace DeathRecap {
             ObjectTable = objectTable;
 
             pluginInterface.UiBuilder.Draw += UiBuilderOnDraw;
-            pluginInterface.UiBuilder.OpenConfigUi += OpenConfigUI;
             gameNetwork.NetworkMessage += GameNetworkOnNetworkMessage;
 
-            CommandManager.AddHandler("/deathrecap", new CommandInfo((_, _) => OpenConfigUI()) { HelpMessage = "Death Recap Configuration Menu" });
+            var commandInfo = new CommandInfo((_, _) => OpenConfigUI()) { HelpMessage = "Show the last death recap" };
+            CommandManager.AddHandler("/deathrecap", commandInfo);
+            CommandManager.AddHandler("/dr", commandInfo);
         }
 
         private void UiBuilderOnDraw() {
@@ -70,7 +71,7 @@ namespace DeathRecap {
                         ImGui.Dummy(textSize);
                         ImGui.PushStyleColor(ImGuiCol.Text, 0xFF808080);
                         ImGui.SameLine();
-                        ImGui.Text(text);
+                        ImGui.TextUnformatted(text);
                         ImGui.PopStyleColor();
                         ImGui.SameLine();
                     }
@@ -80,7 +81,7 @@ namespace DeathRecap {
                         ImGui.Spacing();
                         ImGui.PushStyleColor(ImGuiCol.Text, 0xFF99fad1);
                         ImGui.SameLine();
-                        ImGui.Text($"HP: {e.Snapshot.CurrentHp:N0}");
+                        ImGui.TextUnformatted($"HP: {e.Snapshot.CurrentHp:N0}");
                         ImGui.PopStyleColor();
                     }
 
@@ -94,7 +95,7 @@ namespace DeathRecap {
                                         ImGui.Image(img.ImGuiHandle, new Vector2(16, 16));
                                         if (ImGui.IsItemHovered()) {
                                             ImGui.BeginTooltip();
-                                            ImGui.Text(s.Name);
+                                            ImGui.TextUnformatted(s.Name);
                                             ImGui.EndTooltip();
                                         }
                                     }
@@ -108,11 +109,11 @@ namespace DeathRecap {
                             case CombatEvent.Death death:
                                 deathTime = death.Snapshot.Time;
                                 PrintTime(death);
-                                ImGui.Text("Death");
+                                ImGui.TextUnformatted("Death");
                                 break;
                             case CombatEvent.HoT hot:
                                 PrintTime(hot);
-                                ImGui.Text($"Received HoT");
+                                ImGui.TextUnformatted($"Received HoT");
                                 var total = hot.Amount;
                                 while (i > 0 && deathEvents[i - 1] is CombatEvent.HoT h) {
                                     hot = h;
@@ -120,24 +121,24 @@ namespace DeathRecap {
                                     i--;
                                 }
 
-                                ImGui.PushStyleColor(ImGuiCol.Text, 0xFF00FF00);
+                                ImGui.PushStyleColor(ImGuiCol.Text, 0xff99fad1);
                                 ImGui.SameLine();
-                                ImGui.Text($"+{total:N0}");
+                                ImGui.TextUnformatted($"+{total:N0}");
                                 ImGui.PopStyleColor();
                                 PrintHp(hot);
                                 break;
                             case CombatEvent.DoT dot:
                                 PrintTime(dot);
-                                ImGui.Text($"Received dot damage");
+                                ImGui.TextUnformatted($"Received dot damage");
                                 ImGui.PushStyleColor(ImGuiCol.Text, 0xFF6680e6);
                                 ImGui.SameLine();
-                                ImGui.Text($"{dot.Amount:N0}");
+                                ImGui.TextUnformatted($"{dot.Amount:N0}");
                                 ImGui.PopStyleColor();
                                 PrintHp(dot);
                                 break;
                             case CombatEvent.DamageTaken dt: {
                                 PrintTime(dt);
-                                ImGui.Text($"Hit for");
+                                ImGui.TextUnformatted($"Hit for");
                                 if (dt.DamageType == DamageType.Magic) {
                                     ImGui.PushStyleColor(ImGuiCol.Text, 0xffbe9925);
                                 } else {
@@ -145,30 +146,47 @@ namespace DeathRecap {
                                 }
 
                                 ImGui.SameLine();
-                                ImGui.Text($"-{dt.Amount:N0}{(dt.Crit ? dt.DirectHit ? "!!" : "!" : "")}");
-                                ImGui.PopStyleColor();
-                                ImGui.SameLine();
-                                ImGui.Text("by");
-                                var img = GetIconImage(dt.Icon);
-                                if (img != null) {
-                                    ImGui.SameLine();
-                                    ImGui.Image(img.ImGuiHandle, new Vector2(16, 16));
+                                ImGui.TextUnformatted($"-{dt.Amount:N0}{(dt.Crit ? dt.DirectHit ? "!!" : "!" : "")}");
+                                if (ImGui.IsItemHovered()) {
+                                    ImGui.BeginTooltip();
+                                    ImGui.TextUnformatted($"{dt.DamageType} Damage");
+                                    if (dt.Crit) ImGui.TextUnformatted("Critical Hit");
+                                    if (dt.DirectHit) ImGui.TextUnformatted("Direct Hit");
+                                    if (dt.Parried) ImGui.TextUnformatted("Parried (-20%)");
+                                    if (dt.Blocked) ImGui.TextUnformatted("Blocked (-15%)");
+                                    ImGui.EndTooltip();
                                 }
+                                ImGui.PopStyleColor();
+                                if (dt.DisplayType != ActionEffectDisplayType.HideActionName) {
+                                    ImGui.SameLine();
+                                    ImGui.TextUnformatted("by");
+                                    var img = GetIconImage(dt.Icon);
+                                    if (img != null) {
+                                        ImGui.SameLine();
+                                        ImGui.Image(img.ImGuiHandle, new Vector2(16, 16));
+                                    }
+
+                                    ImGui.PushStyleColor(ImGuiCol.Text, 0xfff0a8b8);
+                                    ImGui.SameLine();
+                                    ImGui.TextUnformatted($"{dt.Action}");
+                                    ImGui.PopStyleColor();
+                                }
+
                                 ImGui.SameLine();
-                                ImGui.Text($"{dt.Action} from {dt.Source}");
+                                ImGui.TextUnformatted($"from {dt.Source}");
                                 PrintHp(dt);
                                 PrintStatusEffects(dt);
                                 break;
                             }
                             case CombatEvent.Healed h: {
                                 PrintTime(h);
-                                ImGui.Text($"Received healing");
-                                ImGui.PushStyleColor(ImGuiCol.Text, 0xFF00FF00);
+                                ImGui.TextUnformatted($"Received healing");
+                                ImGui.PushStyleColor(ImGuiCol.Text, 0xff99fad1);
                                 ImGui.SameLine();
-                                ImGui.Text($"+{h.Amount:N0}");
+                                ImGui.TextUnformatted($"+{h.Amount:N0}");
                                 ImGui.PopStyleColor();
                                 ImGui.SameLine();
-                                ImGui.Text($"from");
+                                ImGui.TextUnformatted($"from");
                                 var img = GetIconImage(h.Icon);
                                 if (img != null) {
                                     ImGui.SameLine();
@@ -176,14 +194,14 @@ namespace DeathRecap {
                                 }
 
                                 ImGui.SameLine();
-                                ImGui.Text($"{h.Action} by {h.Source}");
+                                ImGui.TextUnformatted($"{h.Action} by {h.Source}");
                                 PrintHp(h);
                                 PrintStatusEffects(h);
                                 break;
                             }
                             case CombatEvent.StatusEffect s: {
                                 PrintTime(s);
-                                ImGui.Text($"Received");
+                                ImGui.TextUnformatted($"Received");
                                 var img = GetIconImage(s.Icon);
                                 if (img != null) {
                                     ImGui.SameLine();
@@ -191,7 +209,7 @@ namespace DeathRecap {
                                 }
 
                                 ImGui.SameLine();
-                                ImGui.Text($"{s.Status} ({s.Duration:N0}s) from {s.Source}");
+                                ImGui.TextUnformatted($"{s.Status} ({s.Duration:N0}s) from {s.Source}");
                                 break;
                             }
                         }
@@ -334,7 +352,8 @@ namespace DeathRecap {
                                             DirectHit = (effectData[actionIndex + 1] & 2) == 2,
                                             DamageType = (DamageType)(effectData[actionIndex + 2] & 0xF),
                                             Parried = actionType == ActionType.AbilityParried,
-                                            Blocked = actionType == ActionType.AbilityBlocked
+                                            Blocked = actionType == ActionType.AbilityBlocked,
+                                            DisplayType = message->EffectDisplayType
                                         });
                                         break;
                                     case ActionType.Healing:
