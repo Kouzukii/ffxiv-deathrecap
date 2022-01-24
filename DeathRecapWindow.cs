@@ -25,7 +25,7 @@ namespace DeathRecap {
         public bool ShowDeathRecap { get; internal set; }
 
         private int selectedDeath;
-        
+
         public DeathRecapWindow(DeathRecapPlugin plugin) {
             this.plugin = plugin;
         }
@@ -42,7 +42,7 @@ namespace DeathRecap {
                     ImGui.TextUnformatted("Player");
                     ImGui.SameLine();
                     ImGui.SetNextItemWidth(200 * ImGuiHelpers.GlobalScale);
-                    var playerName = plugin.ClientState.LocalPlayer?.Name?.TextValue ?? "";
+                    var playerName = Service.ClientState.LocalPlayer?.Name?.TextValue ?? "";
                     if (ImGui.BeginCombo("", playerName)) {
                         if (ImGui.Selectable(playerName, true)) {
                         }
@@ -266,7 +266,7 @@ namespace DeathRecap {
             if (e.Snapshot.StatusEffects != null) {
                 ImGui.TableNextColumn();
                 foreach (var effect in e.Snapshot.StatusEffects) {
-                    if (plugin.DataManager.GetExcelSheet<Status>()?.GetRow(effect) is { } s) {
+                    if (Service.DataManager.GetExcelSheet<Status>()?.GetRow(effect) is { } s) {
                         if (s.IsFcBuff) continue;
                         var img = GetIconImage(s.Icon);
                         if (img != null) {
@@ -290,13 +290,14 @@ namespace DeathRecap {
             var hpFract = e.Snapshot.CurrentHp / (float?)e.Snapshot.MaxHp ?? 0;
             ImGui.ProgressBar(hpFract, new Vector2(-1, 0), $"{e.Snapshot.CurrentHp:N0}");
             ImGui.PopStyleColor();
-            
+
             var itemMin = ImGui.GetItemRectMin();
             var itemMax = ImGui.GetItemRectMax();
 
             if (e.Snapshot.BarrierFraction.HasValue) {
                 var barrierFract = e.Snapshot.BarrierFraction.Value / 100f;
-                ImGui.GetWindowDrawList().PushClipRect(itemMin + new Vector2(0, (itemMax.Y - itemMin.Y) * 0.8f), itemMin + new Vector2((itemMax.X - itemMin.X) * barrierFract, itemMax.Y), true);
+                ImGui.GetWindowDrawList().PushClipRect(itemMin + new Vector2(0, (itemMax.Y - itemMin.Y) * 0.8f),
+                    itemMin + new Vector2((itemMax.X - itemMin.X) * barrierFract, itemMax.Y), true);
                 ImGui.GetWindowDrawList().AddRectFilled(itemMin, itemMax, 0xFF33FFFF, ImGui.GetStyle().FrameRounding);
                 ImGui.GetWindowDrawList().PopClipRect();
             }
@@ -311,7 +312,7 @@ namespace DeathRecap {
             if (icon is { } u) {
                 if (textures.TryGetValue(u, out var tex))
                     return tex;
-                if (plugin.DataManager.GetImGuiTextureIcon(u) is { } t)
+                if (Service.DataManager.GetImGuiTextureIcon(u) is { } t)
                     return textures[u] = t;
             }
 

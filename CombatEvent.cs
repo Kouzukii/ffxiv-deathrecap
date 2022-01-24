@@ -11,7 +11,7 @@ namespace DeathRecap {
             public uint? CurrentHp { get; init; }
             public uint? MaxHp { get; init; }
             public List<uint>? StatusEffects { get; init; }
-            public uint? BarrierFraction { get; set; }
+            public uint? BarrierFraction { get; init; }
         }
 
         public record StatusEffect : CombatEvent {
@@ -20,7 +20,7 @@ namespace DeathRecap {
             public ushort? Icon { get; init; }
             public float Duration { get; init; }
             public string? Status { get; init; }
-            public string? Description { get; set; }
+            public string? Description { get; init; }
         }
 
         public record HoT : CombatEvent {

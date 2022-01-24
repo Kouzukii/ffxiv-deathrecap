@@ -1,12 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Dalamud.Data;
-using Dalamud.Game.ClientState;
-using Dalamud.Game.ClientState.Objects;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Game.Command;
-using Dalamud.Game.Gui;
 using Dalamud.Game.Network;
 using Dalamud.Logging;
 using Dalamud.Plugin;
@@ -17,15 +13,6 @@ using Action = Lumina.Excel.GeneratedSheets.Action;
 namespace DeathRecap {
     public class DeathRecapPlugin : IDalamudPlugin {
         public string Name => "DeathRecap";
-
-        internal DalamudPluginInterface PluginInterface { get; }
-        internal CommandManager CommandManager { get; }
-        internal GameNetwork GameNetwork { get; }
-        internal DataManager DataManager { get; }
-        internal ChatGui ChatGui { get; }
-        internal ClientState ClientState { get; }
-        internal ObjectTable ObjectTable { get; }
-
         public DeathRecapWindow Window { get; }
         public DateTime? LastDeath { get; internal set; }
 
@@ -33,24 +20,17 @@ namespace DeathRecap {
 
         public List<List<CombatEvent>> Deaths { get; } = new();
 
-        public DeathRecapPlugin(DalamudPluginInterface pluginInterface, CommandManager commandManager, GameNetwork gameNetwork, DataManager dataManager,
-            ChatGui chatGui, ClientState clientState, ObjectTable objectTable) {
-            PluginInterface = pluginInterface;
-            CommandManager = commandManager;
-            GameNetwork = gameNetwork;
-            DataManager = dataManager;
-            ChatGui = chatGui;
-            ClientState = clientState;
-            ObjectTable = objectTable;
+        public DeathRecapPlugin(DalamudPluginInterface pluginInterface) {
+            Service.Initialize(pluginInterface);
 
             Window = new DeathRecapWindow(this);
 
             pluginInterface.UiBuilder.Draw += UiBuilderOnDraw;
-            gameNetwork.NetworkMessage += GameNetworkOnNetworkMessage;
+            Service.GameNetwork.NetworkMessage += GameNetworkOnNetworkMessage;
 
             var commandInfo = new CommandInfo((_, _) => Window.ShowDeathRecap = true) { HelpMessage = "Show the last death recap" };
-            CommandManager.AddHandler("/deathrecap", commandInfo);
-            CommandManager.AddHandler("/dr", commandInfo);
+            Service.CommandManager.AddHandler("/deathrecap", commandInfo);
+            Service.CommandManager.AddHandler("/dr", commandInfo);
         }
 
         private void UiBuilderOnDraw() {
@@ -63,7 +43,7 @@ namespace DeathRecap {
             try {
                 switch ((Opcodes)opcode) {
                     case Opcodes.ActorControl: {
-                        if (targetactorid != ObjectTable[0]?.ObjectId) return;
+                        if (targetactorid != Service.ObjectTable[0]?.ObjectId) return;
                         var actorCtrl = (ActorControl142*)dataptr;
                         if (actorCtrl->Category == ActorControlCategory.HoTDoT) {
                             if (actorCtrl->Param2 == 4) {
@@ -82,7 +62,7 @@ namespace DeathRecap {
                         break;
                     }
                     case Opcodes.EffectResult: {
-                        if (targetactorid != ObjectTable[0]?.ObjectId) return;
+                        if (targetactorid != Service.ObjectTable[0]?.ObjectId) return;
                         var message = (AddStatusEffect*)dataptr;
                         var effects = (StatusEffectAddEntry*)message->Effects;
                         var effectCount = Math.Min(message->EffectCount, 4u);
@@ -90,8 +70,8 @@ namespace DeathRecap {
                             var effect = effects[j];
                             var effectId = effect.EffectId;
                             if (effectId <= 0) continue;
-                            var source = ObjectTable.SearchById(effect.SourceActorId)?.Name.TextValue;
-                            var status = DataManager.Excel.GetSheet<Status>()?.GetRow(effectId);
+                            var source = Service.ObjectTable.SearchById(effect.SourceActorId)?.Name.TextValue;
+                            var status = Service.DataManager.Excel.GetSheet<Status>()?.GetRow(effectId);
 
                             combatEvents.Add(new CombatEvent.StatusEffect {
                                 Snapshot = CreateSnapshot(),
@@ -155,7 +135,7 @@ namespace DeathRecap {
 
                         for (var i = 0; i < targets; i++) {
                             uint actionTargetId = (uint)(targetIds[i] & uint.MaxValue);
-                            if (actionTargetId != ObjectTable[0]?.ObjectId) continue;
+                            if (actionTargetId != Service.ObjectTable[0]?.ObjectId) continue;
                             for (var j = 0; j < 8; j++) {
                                 var actionIndex = i * 64 + j * 8;
                                 if (effectData[actionIndex] == 0) continue;
@@ -165,8 +145,8 @@ namespace DeathRecap {
                                 }
 
                                 var actionType = ConvertActionType(effectData[actionIndex]);
-                                action ??= DataManager.Excel.GetSheet<Action>()?.GetRow(actionId);
-                                source ??= ObjectTable.SearchById(targetactorid)?.Name.TextValue;
+                                action ??= Service.DataManager.Excel.GetSheet<Action>()?.GetRow(actionId);
+                                source ??= Service.ObjectTable.SearchById(targetactorid)?.Name.TextValue;
 
                                 switch (actionType) {
                                     case ActionType.Ability:
@@ -243,7 +223,7 @@ namespace DeathRecap {
         }
 
         private CombatEvent.EventSnapshot CreateSnapshot(bool snapEffects = false) {
-            var localPlayer = ClientState.LocalPlayer;
+            var localPlayer = Service.ClientState.LocalPlayer;
             var snapshot = new CombatEvent.EventSnapshot {
                 Time = DateTime.Now,
                 CurrentHp = localPlayer?.CurrentHp,
@@ -257,9 +237,9 @@ namespace DeathRecap {
         private unsafe byte? PlayerBarrier(PlayerCharacter? player) => *(byte*)(player?.Address + 0x19D9);
 
         public void Dispose() {
-            GameNetwork.NetworkMessage -= GameNetworkOnNetworkMessage;
-            CommandManager.RemoveHandler("/deathrecap");
-            CommandManager.RemoveHandler("/dr");
+            Service.GameNetwork.NetworkMessage -= GameNetworkOnNetworkMessage;
+            Service.CommandManager.RemoveHandler("/deathrecap");
+            Service.CommandManager.RemoveHandler("/dr");
         }
     }
 }
