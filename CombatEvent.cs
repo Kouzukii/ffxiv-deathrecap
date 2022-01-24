@@ -3,39 +3,40 @@ using System.Collections.Generic;
 using DeathRecap.Messages;
 
 namespace DeathRecap {
-    internal record CombatEvent {
+    public record CombatEvent {
         public EventSnapshot Snapshot { get; init; }
 
-        internal record EventSnapshot {
+        public record EventSnapshot {
             public DateTime Time { get; init; }
             public uint? CurrentHp { get; init; }
             public uint? MaxHp { get; init; }
             public List<uint>? StatusEffects { get; init; }
-            public uint? Barrier { get; set; }
+            public uint? BarrierFraction { get; set; }
         }
 
-        internal record StatusEffect : CombatEvent {
+        public record StatusEffect : CombatEvent {
             public uint Id { get; init; }
             public string? Source { get; init; }
             public ushort? Icon { get; init; }
             public float Duration { get; init; }
             public string? Status { get; init; }
+            public string? Description { get; set; }
         }
 
-        internal record HoT : CombatEvent {
+        public record HoT : CombatEvent {
             public uint Id { get; init; }
             public uint Amount { get; init; }
         }
 
-        internal record DoT : CombatEvent {
+        public record DoT : CombatEvent {
             public uint Id { get; init; }
             public uint Amount { get; init; }
         }
 
-        internal record Death : CombatEvent {
+        public record Death : CombatEvent {
         }
 
-        internal record DamageTaken : CombatEvent {
+        public record DamageTaken : CombatEvent {
             public string? Source { get; init; }
             public int Amount { get; init; }
             public string? Action { get; init; }

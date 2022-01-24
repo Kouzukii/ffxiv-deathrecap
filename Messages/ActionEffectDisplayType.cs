@@ -3,6 +3,6 @@ namespace DeathRecap.Messages {
         HideActionName = 0,
         ShowActionName = 1,
         ShowItemName = 2,
-        MountName = 13
+        MountName = 0x0d
     }
 }

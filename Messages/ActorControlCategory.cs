@@ -1,16 +1,16 @@
 namespace DeathRecap.Messages {
-    public enum ActorControlCategory : ushort {
-        HoTDoT = 23,
-        CancelAbility = 0xF,
-        Death = 6,
-        TargetIcon = 34,
-        Tether = 35,
-        GainEffect = 20,
-        LoseEffect = 21,
-        UpdateEffect = 22,
-        Targetable = 54,
-        DirectorUpdate = 109,
-        SetTargetSign = 502,
-        LimitBreak = 505
+    public enum ActorControlCategory : ushort {        
+        HoTDoT = 0x17,
+        CancelAbility = 0x0f,
+        Death = 0x06,
+        TargetIcon = 0x22,
+        Tether = 0x23,
+        GainEffect = 0x14,
+        LoseEffect = 0x15,
+        UpdateEffect = 0x16,
+        Targetable = 0x36,
+        DirectorUpdate = 0x6d,
+        SetTargetSign = 0x1f6,
+        LimitBreak = 0x1f9
     }
 }
