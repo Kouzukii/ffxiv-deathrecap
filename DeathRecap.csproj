@@ -11,7 +11,9 @@
         <Nullable>enable</Nullable>
         <GeneratePackageOnBuild>false</GeneratePackageOnBuild>     
         <ProduceReferenceAssembly>false</ProduceReferenceAssembly>     
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>     
+        <AssemblyVersion>1.1.0.0</AssemblyVersion>     
+        <FileVersion>1.1.0.0</FileVersion>
     </PropertyGroup>
 
     <!-- Dalamud Configuration -->
