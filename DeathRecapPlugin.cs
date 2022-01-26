@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Dalamud.Game.ClientState.Objects.SubKinds;
+using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Game.Command;
 using Dalamud.Game.Network;
 using Dalamud.Logging;
@@ -132,6 +133,8 @@ namespace DeathRecap {
                         };
                         Action? action = null;
                         string? source = null;
+                        GameObject? gameObject = null;
+                        List<uint>? additionalStatus = null;
 
                         for (var i = 0; i < targets; i++) {
                             uint actionTargetId = (uint)(targetIds[i] & uint.MaxValue);
@@ -146,14 +149,15 @@ namespace DeathRecap {
 
                                 var actionType = ConvertActionType(effectData[actionIndex]);
                                 action ??= Service.DataManager.Excel.GetSheet<Action>()?.GetRow(actionId);
-                                source ??= Service.ObjectTable.SearchById(targetactorid)?.Name.TextValue;
+                                gameObject ??= Service.ObjectTable.SearchById(targetactorid);
+                                source ??= gameObject?.Name.TextValue;
 
                                 switch (actionType) {
                                     case ActionType.Ability:
                                     case ActionType.AbilityBlocked:
                                     case ActionType.AbilityParried:
                                         combatEvents.Add(new CombatEvent.DamageTaken {
-                                            Snapshot = CreateSnapshot(true),
+                                            Snapshot = CreateSnapshot(true, additionalStatus ??= gameObject is BattleChara b ? b.StatusList.Select(s => s.StatusId).Where(s => s is 1203 or 1195 or 1193).ToList() : new List<uint>()),
                                             Source = source,
                                             Amount = amount,
                                             Action = action?.Name?.RawString,
@@ -222,13 +226,15 @@ namespace DeathRecap {
             };
         }
 
-        private CombatEvent.EventSnapshot CreateSnapshot(bool snapEffects = false) {
+        private CombatEvent.EventSnapshot CreateSnapshot(bool snapEffects = false, IReadOnlyCollection<uint>? additionalStatus = null) {
             var localPlayer = Service.ClientState.LocalPlayer;
+            var statusEffects = snapEffects ? localPlayer?.StatusList?.Select(s => s.StatusId).ToList() : null;
+            if (additionalStatus != null) statusEffects?.AddRange(additionalStatus);
             var snapshot = new CombatEvent.EventSnapshot {
                 Time = DateTime.Now,
                 CurrentHp = localPlayer?.CurrentHp,
                 MaxHp = localPlayer?.MaxHp,
-                StatusEffects = snapEffects ? localPlayer?.StatusList?.Select(s => s.StatusId).ToList() : null,
+                StatusEffects = statusEffects,
                 BarrierFraction = PlayerBarrier(localPlayer)
             };
             return snapshot;
