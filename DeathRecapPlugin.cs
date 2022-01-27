@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Game.Command;
 using Dalamud.Game.Network;
@@ -157,7 +156,11 @@ namespace DeathRecap {
                                     case ActionType.AbilityBlocked:
                                     case ActionType.AbilityParried:
                                         combatEvents.Add(new CombatEvent.DamageTaken {
-                                            Snapshot = CreateSnapshot(true, additionalStatus ??= gameObject is BattleChara b ? b.StatusList.Select(s => s.StatusId).Where(s => s is 1203 or 1195 or 1193).ToList() : new List<uint>()),
+                                            Snapshot =
+                                                CreateSnapshot(true,
+                                                    additionalStatus ??= gameObject is BattleChara b
+                                                        ? b.StatusList.Select(s => s.StatusId).Where(s => s is 1203 or 1195 or 1193).ToList()
+                                                        : new List<uint>()),
                                             Source = source,
                                             Amount = amount,
                                             Action = action?.Name?.RawString,
@@ -235,12 +238,11 @@ namespace DeathRecap {
                 CurrentHp = localPlayer?.CurrentHp,
                 MaxHp = localPlayer?.MaxHp,
                 StatusEffects = statusEffects,
-                BarrierFraction = PlayerBarrier(localPlayer)
+                BarrierPercent = localPlayer?.Barrier()
             };
             return snapshot;
         }
 
-        private unsafe byte? PlayerBarrier(PlayerCharacter? player) => *(byte*)(player?.Address + 0x19D9);
 
         public void Dispose() {
             Service.GameNetwork.NetworkMessage -= GameNetworkOnNetworkMessage;

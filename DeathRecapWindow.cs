@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
 using Dalamud.Interface;
 using Dalamud.Logging;
@@ -12,11 +11,11 @@ using Lumina.Excel.GeneratedSheets;
 namespace DeathRecap {
     public class DeathRecapWindow {
         private static readonly Vector4 ColorHealing = new(0.8196079F, 0.9803922F, 0.6F, 1);
-        private static readonly Vector4 ColorDamage = new Vector4(0.9019608F, 0.5019608F, 0.4F, 1);
-        private static readonly Vector4 ColorMagicDamage = new Vector4(0.145098F, 0.6F, 0.7450981F, 1f);
-        private static readonly Vector4 ColorPhysicalDamage = new Vector4(1F, 0.6392157F, 0.2901961F, 1f);
-        private static readonly Vector4 ColorAction = new Vector4(0.7215686F, 0.6588235F, 0.9411765F, 1);
-        private static readonly Vector4 ColorGrey = new Vector4(0.5019608F, 0.5019608F, 0.5019608F, 1);
+        private static readonly Vector4 ColorDamage = new(0.9019608F, 0.5019608F, 0.4F, 1);
+        private static readonly Vector4 ColorMagicDamage = new(0.145098F, 0.6F, 0.7450981F, 1);
+        private static readonly Vector4 ColorPhysicalDamage = new(1F, 0.6392157F, 0.2901961F, 1);
+        private static readonly Vector4 ColorAction = new(0.7215686F, 0.6588235F, 0.9411765F, 1);
+        private static readonly Vector4 ColorGrey = new(0.5019608F, 0.5019608F, 0.5019608F, 1);
 
         private readonly DeathRecapPlugin plugin;
 
@@ -32,10 +31,21 @@ namespace DeathRecap {
 
         public void Draw() {
             try {
-                bool bShowDeathRecap = (ShowDeathRecap || (DateTime.Now - plugin.LastDeath)?.TotalSeconds < 30);
+                var elapsed = (DateTime.Now - plugin.LastDeath)?.TotalSeconds;
+                if (!ShowDeathRecap && elapsed < 30) {
+                    var viewport = ImGui.GetMainViewport();
+                    ImGui.SetNextWindowPos(new Vector2(viewport.WorkPos.X + viewport.WorkSize.X / 2 - 100 * ImGuiHelpers.GlobalScale, viewport.WorkPos.Y + viewport.WorkSize.Y / 2 - 40 * ImGuiHelpers.GlobalScale), ImGuiCond.FirstUseEver);
+                    ImGui.SetNextWindowSize(ImGuiHelpers.ScaledVector2(200, 80));
+                    if (ImGui.Begin("(Drag me somewhere)", ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse)) {
+                        if (ImGui.Button($"Show Death Recap ({30 - elapsed:N0}s)", new Vector2(-1, -1))) {
+                            ShowDeathRecap = true;
+                        }
+                    }
+                }
+                if (!ShowDeathRecap) return;
+                var bShowDeathRecap = ShowDeathRecap;
                 ImGui.SetNextWindowSize(ImGuiHelpers.ScaledVector2(800, 350), ImGuiCond.FirstUseEver);
-                if (bShowDeathRecap && ImGui.Begin("Death Recap", ref bShowDeathRecap, ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoFocusOnAppearing)) {
-                    if (ImGui.IsWindowFocused()) ShowDeathRecap = true;
+                if (ImGui.Begin("Death Recap", ref bShowDeathRecap, ImGuiWindowFlags.NoCollapse)) {
                     if (selectedDeath >= plugin.Deaths.Count || selectedDeath < 0)
                         selectedDeath = 0;
 
@@ -46,6 +56,7 @@ namespace DeathRecap {
                     if (ImGui.BeginCombo("", playerName)) {
                         if (ImGui.Selectable(playerName, true)) {
                         }
+
                         ImGui.EndCombo();
                     }
 
@@ -65,8 +76,19 @@ namespace DeathRecap {
                     ImGui.Columns(2);
                     ImGui.SetColumnWidth(0, 160 * ImGuiHelpers.GlobalScale);
                     ImGui.TextUnformatted("Deaths");
-                    ImGui.SetNextItemWidth(-1);
-                    ImGui.ListBox("", ref selectedDeath, plugin.Deaths.Select(DeathTitle).Reverse().ToArray(), plugin.Deaths.Count);
+                    for (var index = plugin.Deaths.Count - 1; index >= 0; index--) {
+                        ImGui.PushID(index);
+                        if (ImGui.SmallButton("x")) {
+                            plugin.Deaths.RemoveAt(index--);
+                        } else {
+                            ImGui.SameLine();
+                            if (ImGui.Selectable(DeathTitle(plugin.Deaths[index]), index == plugin.Deaths.Count - 1 - selectedDeath)) {
+                                selectedDeath = plugin.Deaths.Count - 1 - index;
+                            }
+                        }
+
+                        ImGui.PopID();
+                    }
 
                     ImGui.NextColumn();
 
@@ -87,164 +109,166 @@ namespace DeathRecap {
         private void CombatEventTable(List<CombatEvent> deathEvents) {
             var deathTime = DateTime.Now;
 
-            ImGui.BeginTable("deathrecap", 6, ImGuiTableFlags.Borders | ImGuiTableFlags.NoBordersInBody | ImGuiTableFlags.ScrollY | ImGuiTableFlags.Resizable);
-            ImGui.TableSetupColumn("Time", ImGuiTableColumnFlags.WidthFixed);
-            ImGui.TableSetupColumn("Amount", ImGuiTableColumnFlags.WidthFixed);
-            ImGui.TableSetupColumn("Ability");
-            ImGui.TableSetupColumn("Source");
-            ImGui.TableSetupColumn("HP Before");
-            ImGui.TableSetupColumn("Status Effects");
-            ImGui.TableHeadersRow();
+            if (ImGui.BeginTable("deathrecap", 6,
+                ImGuiTableFlags.Borders | ImGuiTableFlags.NoBordersInBody | ImGuiTableFlags.ScrollY | ImGuiTableFlags.Resizable)) {
+                ImGui.TableSetupColumn("Time", ImGuiTableColumnFlags.WidthFixed);
+                ImGui.TableSetupColumn("Amount", ImGuiTableColumnFlags.WidthFixed);
+                ImGui.TableSetupColumn("Ability");
+                ImGui.TableSetupColumn("Source");
+                ImGui.TableSetupColumn("HP Before");
+                ImGui.TableSetupColumn("Status Effects");
+                ImGui.TableHeadersRow();
 
-            for (var i = deathEvents.Count - 1; i >= 0; i--) {
-                switch (deathEvents[i]) {
-                    case CombatEvent.Death death:
-                        deathTime = death.Snapshot.Time;
-                        PrintTimeColumn(death, deathTime);
+                for (var i = deathEvents.Count - 1; i >= 0; i--) {
+                    switch (deathEvents[i]) {
+                        case CombatEvent.Death death:
+                            deathTime = death.Snapshot.Time;
+                            PrintTimeColumn(death, deathTime);
 
-                        ImGui.TableNextColumn(); // Amount
+                            ImGui.TableNextColumn(); // Amount
 
-                        ImGui.TableNextColumn(); // Ability
-                        ImGui.TextUnformatted("Death");
-                        break;
-                    case CombatEvent.HoT hot:
-                        ImGui.TableNextRow();
+                            ImGui.TableNextColumn(); // Ability
+                            ImGui.TextUnformatted("Death");
+                            break;
+                        case CombatEvent.HoT hot:
+                            ImGui.TableNextRow();
 
-                        PrintTimeColumn(hot, deathTime);
+                            PrintTimeColumn(hot, deathTime);
 
-                        var total = hot.Amount;
-                        while (i > 0 && deathEvents[i - 1] is CombatEvent.HoT h) {
-                            hot = h;
-                            total += h.Amount;
-                            i--;
+                            var total = hot.Amount;
+                            while (i > 0 && deathEvents[i - 1] is CombatEvent.HoT h) {
+                                hot = h;
+                                total += h.Amount;
+                                i--;
+                            }
+
+                            ImGui.TableNextColumn(); // Amount
+                            ImGui.TextColored(ColorHealing, $"+{total:N0}");
+
+                            ImGui.TableNextColumn(); // Ability
+                            ImGui.TextUnformatted("Regen");
+
+                            ImGui.TableNextColumn(); // Source
+
+                            PrintHpColumn(hot);
+                            break;
+                        case CombatEvent.DoT dot:
+                            ImGui.TableNextRow();
+
+                            PrintTimeColumn(dot, deathTime);
+
+                            ImGui.TableNextColumn(); // Amount
+                            ImGui.TextColored(ColorDamage, $"-{dot.Amount:N0}");
+
+                            ImGui.TableNextColumn(); // Ability
+                            ImGui.TextUnformatted($"DoT damage");
+
+                            ImGui.TableNextColumn(); // Source
+
+                            PrintHpColumn(dot);
+                            break;
+                        case CombatEvent.DamageTaken dt: {
+                            ImGui.TableNextRow();
+
+                            PrintTimeColumn(dt, deathTime);
+
+                            ImGui.TableNextColumn(); // Amount
+                            var text = $"-{dt.Amount:N0}{(dt.Crit ? dt.DirectHit ? "!!" : "!" : "")}";
+                            if (dt.DamageType == DamageType.Magic) {
+                                ImGui.TextColored(ColorMagicDamage, text);
+                            } else {
+                                ImGui.TextColored(ColorPhysicalDamage, text);
+                            }
+
+                            if (ImGui.IsItemHovered()) {
+                                ImGui.BeginTooltip();
+                                ImGui.TextUnformatted($"{dt.DamageType} Damage");
+                                if (dt.Crit) ImGui.TextUnformatted("Critical Hit");
+                                if (dt.DirectHit) ImGui.TextUnformatted("Direct Hit (+25%)");
+                                if (dt.Parried) ImGui.TextUnformatted("Parried (-20%)");
+                                if (dt.Blocked) ImGui.TextUnformatted("Blocked (-15%)");
+                                ImGui.EndTooltip();
+                            }
+
+                            ImGui.TableNextColumn(); // Ability
+                            if (dt.DisplayType != ActionEffectDisplayType.HideActionName) {
+                                var img = GetIconImage(dt.Icon);
+                                if (img != null) {
+                                    ImGui.Image(img.ImGuiHandle, ImGuiHelpers.ScaledVector2(16, 16));
+                                    ImGui.SameLine();
+                                }
+
+                                ImGui.TextColored(ColorAction, $"{dt.Action}");
+                            }
+
+                            ImGui.TableNextColumn(); // Source
+                            ImGui.TextUnformatted(dt.Source ?? "");
+
+                            PrintHpColumn(dt);
+
+                            PrintStatusEffectsColumn(dt);
+                            break;
                         }
+                        case CombatEvent.Healed h: {
+                            ImGui.TableNextRow();
 
-                        ImGui.TableNextColumn(); // Amount
-                        ImGui.TextColored(ColorHealing, $"+{total:N0}");
+                            PrintTimeColumn(h, deathTime);
 
-                        ImGui.TableNextColumn(); // Ability
-                        ImGui.TextUnformatted("Regen");
+                            ImGui.TableNextColumn(); // Amount
+                            ImGui.TextColored(ColorHealing, $"+{h.Amount:N0}");
 
-                        ImGui.TableNextColumn(); // Source
-
-                        PrintHpColumn(hot);
-                        break;
-                    case CombatEvent.DoT dot:
-                        ImGui.TableNextRow();
-
-                        PrintTimeColumn(dot, deathTime);
-
-                        ImGui.TableNextColumn(); // Amount
-                        ImGui.TextColored(ColorDamage, $"-{dot.Amount:N0}");
-
-                        ImGui.TableNextColumn(); // Ability
-                        ImGui.TextUnformatted($"DoT damage");
-
-                        ImGui.TableNextColumn(); // Source
-
-                        PrintHpColumn(dot);
-                        break;
-                    case CombatEvent.DamageTaken dt: {
-                        ImGui.TableNextRow();
-
-                        PrintTimeColumn(dt, deathTime);
-
-                        ImGui.TableNextColumn(); // Amount
-                        var text = $"-{dt.Amount:N0}{(dt.Crit ? dt.DirectHit ? "!!" : "!" : "")}";
-                        if (dt.DamageType == DamageType.Magic) {
-                            ImGui.TextColored(ColorMagicDamage, text);
-                        } else {
-                            ImGui.TextColored(ColorPhysicalDamage, text);
-                        }
-
-                        if (ImGui.IsItemHovered()) {
-                            ImGui.BeginTooltip();
-                            ImGui.TextUnformatted($"{dt.DamageType} Damage");
-                            if (dt.Crit) ImGui.TextUnformatted("Critical Hit");
-                            if (dt.DirectHit) ImGui.TextUnformatted("Direct Hit (+25%)");
-                            if (dt.Parried) ImGui.TextUnformatted("Parried (-20%)");
-                            if (dt.Blocked) ImGui.TextUnformatted("Blocked (-15%)");
-                            ImGui.EndTooltip();
-                        }
-
-                        ImGui.TableNextColumn(); // Ability
-                        if (dt.DisplayType != ActionEffectDisplayType.HideActionName) {
-                            var img = GetIconImage(dt.Icon);
+                            ImGui.TableNextColumn(); // Ability
+                            var img = GetIconImage(h.Icon);
                             if (img != null) {
                                 ImGui.Image(img.ImGuiHandle, ImGuiHelpers.ScaledVector2(16, 16));
                                 ImGui.SameLine();
                             }
 
-                            ImGui.TextColored(ColorAction, $"{dt.Action}");
+                            ImGui.TextColored(ColorAction, h.Action ?? "");
+
+                            ImGui.TableNextColumn(); // Source
+                            ImGui.TextUnformatted(h.Source ?? "");
+
+                            PrintHpColumn(h);
+
+                            PrintStatusEffectsColumn(h);
+                            break;
                         }
+                        case CombatEvent.StatusEffect s: {
+                            ImGui.TableNextRow();
 
-                        ImGui.TableNextColumn(); // Source
-                        ImGui.TextUnformatted(dt.Source ?? "");
+                            PrintTimeColumn(s, deathTime);
 
-                        PrintHpColumn(dt);
+                            ImGui.TableNextColumn(); // Amount
+                            ImGui.TextUnformatted($"{s.Duration:N0}s");
 
-                        PrintStatusEffectsColumn(dt);
-                        break;
-                    }
-                    case CombatEvent.Healed h: {
-                        ImGui.TableNextRow();
+                            ImGui.TableNextColumn(); // Ability
+                            var img = GetIconImage(s.Icon);
+                            if (img != null) {
+                                ImGui.Image(img.ImGuiHandle, ImGuiHelpers.ScaledVector2(16, 16));
+                                ImGui.SameLine();
+                            }
 
-                        PrintTimeColumn(h, deathTime);
+                            ImGui.TextUnformatted(s.Status ?? "");
+                            if (ImGui.IsItemHovered()) {
+                                ImGui.BeginTooltip();
+                                ImGui.TextUnformatted(s.Description);
+                                ImGui.EndTooltip();
+                            }
 
-                        ImGui.TableNextColumn(); // Amount
-                        ImGui.TextColored(ColorHealing, $"+{h.Amount:N0}");
+                            ImGui.TableNextColumn(); // Source
+                            ImGui.TextUnformatted(s.Source ?? "");
 
-                        ImGui.TableNextColumn(); // Ability
-                        var img = GetIconImage(h.Icon);
-                        if (img != null) {
-                            ImGui.Image(img.ImGuiHandle, ImGuiHelpers.ScaledVector2(16, 16));
-                            ImGui.SameLine();
+                            PrintHpColumn(s);
+
+                            PrintStatusEffectsColumn(s);
+                            break;
                         }
-
-                        ImGui.TextColored(ColorAction, h.Action ?? "");
-
-                        ImGui.TableNextColumn(); // Source
-                        ImGui.TextUnformatted(h.Source ?? "");
-
-                        PrintHpColumn(h);
-
-                        PrintStatusEffectsColumn(h);
-                        break;
-                    }
-                    case CombatEvent.StatusEffect s: {
-                        ImGui.TableNextRow();
-
-                        PrintTimeColumn(s, deathTime);
-
-                        ImGui.TableNextColumn(); // Amount
-                        ImGui.TextUnformatted($"{s.Duration:N0}s");
-
-                        ImGui.TableNextColumn(); // Ability
-                        var img = GetIconImage(s.Icon);
-                        if (img != null) {
-                            ImGui.Image(img.ImGuiHandle, ImGuiHelpers.ScaledVector2(16, 16));
-                            ImGui.SameLine();
-                        }
-
-                        ImGui.TextUnformatted(s.Status ?? "");
-                        if (ImGui.IsItemHovered()) {
-                            ImGui.BeginTooltip();
-                            ImGui.TextUnformatted(s.Description);
-                            ImGui.EndTooltip();
-                        }
-
-                        ImGui.TableNextColumn(); // Source
-                        ImGui.TextUnformatted(s.Source ?? "");
-
-                        PrintHpColumn(s);
-
-                        PrintStatusEffectsColumn(s);
-                        break;
                     }
                 }
-            }
 
-            ImGui.EndTable();
+                ImGui.EndTable();
+            }
         }
 
         private string DeathTitle(List<CombatEvent> combatEvents) {
@@ -294,8 +318,8 @@ namespace DeathRecap {
             var itemMin = ImGui.GetItemRectMin();
             var itemMax = ImGui.GetItemRectMax();
 
-            if (e.Snapshot.BarrierFraction.HasValue) {
-                var barrierFract = e.Snapshot.BarrierFraction.Value / 100f;
+            if (e.Snapshot.BarrierPercent.HasValue) {
+                var barrierFract = e.Snapshot.BarrierPercent.Value / 100f;
                 ImGui.GetWindowDrawList().PushClipRect(itemMin + new Vector2(0, (itemMax.Y - itemMin.Y) * 0.8f),
                     itemMin + new Vector2((itemMax.X - itemMin.X) * barrierFract, itemMax.Y), true);
                 ImGui.GetWindowDrawList().AddRectFilled(itemMin, itemMax, 0xFF33FFFF, ImGui.GetStyle().FrameRounding);

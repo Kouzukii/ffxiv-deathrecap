@@ -11,7 +11,7 @@ namespace DeathRecap {
             public uint? CurrentHp { get; init; }
             public uint? MaxHp { get; init; }
             public List<uint>? StatusEffects { get; init; }
-            public uint? BarrierFraction { get; init; }
+            public uint? BarrierPercent { get; init; }
         }
 
         public record StatusEffect : CombatEvent {
