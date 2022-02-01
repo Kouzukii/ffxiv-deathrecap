@@ -4,7 +4,7 @@ Quickly figure out what killed you or your party members!
 
 Shows healing, damage taken, debuffs, buffs and barriers.
 
-![deathrecap](images/deathrecap.png)
+![deathrecap](images/image1.png)
 
 ## Installation
 
