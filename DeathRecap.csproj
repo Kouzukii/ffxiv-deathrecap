@@ -61,12 +61,10 @@
     </ItemGroup>
     
     <ItemGroup>
-      <None Remove="images\deathrecap.png" />
-      <Content Include="images\deathrecap.png">
+      <Content Include="images\icon.png">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
-      <None Remove="images\icon.png" />
-      <Content Include="images\icon.png">
+      <Content Include="images\image1.png">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
     </ItemGroup>
