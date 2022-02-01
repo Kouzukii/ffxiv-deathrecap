@@ -12,8 +12,8 @@
         <GeneratePackageOnBuild>false</GeneratePackageOnBuild>     
         <ProduceReferenceAssembly>false</ProduceReferenceAssembly>     
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>     
-        <AssemblyVersion>1.4.0.0</AssemblyVersion>     
-        <FileVersion>1.4.0.0</FileVersion>
+        <AssemblyVersion>1.5.0.0</AssemblyVersion>     
+        <FileVersion>1.5.0.0</FileVersion>
     </PropertyGroup>
 
     <!-- Dalamud Configuration -->
@@ -60,12 +60,23 @@
         <PackageReference Include="DalamudPackager" Version="2.1.5" />
     </ItemGroup>
     
+    <ItemGroup>
+      <None Remove="images\deathrecap.png" />
+      <Content Include="images\deathrecap.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="images\icon.png" />
+      <Content Include="images\icon.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+    
     <PropertyGroup Condition="'$(Configuration)' == 'Debug' ">
-        <OutputPath>$(AppData)\XIVLauncher\devPlugins</OutputPath>
+        <OutputPath>$(AppData)\XIVLauncher\devPlugins\$(AssemblyName)</OutputPath>
     </PropertyGroup>
 
     <Target Name="DalamudPackageDebug" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug'">
-        <DalamudPackager ProjectDir="$(ProjectDir)" OutputPath="$(AppData)\XIVLauncher\devPlugins" AssemblyName="$(AssemblyName)" MakeZip="false" VersionComponents="4" />
+        <DalamudPackager ProjectDir="$(ProjectDir)" OutputPath="$(AppData)\XIVLauncher\devPlugins\$(AssemblyName)" AssemblyName="$(AssemblyName)" MakeZip="false" VersionComponents="4" />
     </Target>
     
     <Target Name="DalamudPackageRelease" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">

@@ -33,9 +33,6 @@ namespace DeathRecap {
             public uint Amount { get; init; }
         }
 
-        public record Death : CombatEvent {
-        }
-
         public record DamageTaken : CombatEvent {
             public string? Source { get; init; }
             public int Amount { get; init; }

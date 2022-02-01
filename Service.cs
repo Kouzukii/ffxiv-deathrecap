@@ -1,6 +1,7 @@
 using Dalamud.Data;
 using Dalamud.Game.ClientState;
 using Dalamud.Game.ClientState.Objects;
+using Dalamud.Game.ClientState.Party;
 using Dalamud.Game.Command;
 using Dalamud.Game.Gui;
 using Dalamud.Game.Network;
@@ -40,6 +41,10 @@ namespace DeathRecap {
         [PluginService]
         [RequiredVersion("1.0")]
         internal static ObjectTable ObjectTable { get; private set; }
+
+        [PluginService]
+        [RequiredVersion("1.0")]
+        internal static PartyList PartyList { get; private set; }
     }
 }
 #pragma warning restore 8618

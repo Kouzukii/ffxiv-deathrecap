@@ -1,12 +1,10 @@
 # Death Recap
 
-Quickly figure out what killed you!
+Quickly figure out what killed you or your party members!
 
 Shows healing, damage taken, debuffs, buffs and barriers.
 
-Currently only supports own deaths, might add inspecting other people's deaths in the future.
-
-![deathrecap](docs/deathrecap.png)
+![deathrecap](images/deathrecap.png)
 
 ## Installation
 

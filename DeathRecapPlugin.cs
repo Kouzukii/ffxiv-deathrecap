@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Game.Command;
 using Dalamud.Game.Network;
@@ -14,11 +15,13 @@ namespace DeathRecap {
     public class DeathRecapPlugin : IDalamudPlugin {
         public string Name => "DeathRecap";
         public DeathRecapWindow Window { get; }
-        public DateTime? LastDeath { get; internal set; }
+        public Death? LastDeath { get; internal set; }
 
-        private List<CombatEvent> combatEvents = new();
+        private readonly Dictionary<uint, List<CombatEvent>> combatEvents = new();
 
-        public List<List<CombatEvent>> Deaths { get; } = new();
+        public Dictionary<uint, List<Death>> DeathsPerPlayer { get; } = new();
+
+        private DateTime lastClean = DateTime.Now;
 
         public DeathRecapPlugin(DalamudPluginInterface pluginInterface) {
             Service.Initialize(pluginInterface);
@@ -28,13 +31,18 @@ namespace DeathRecap {
             pluginInterface.UiBuilder.Draw += UiBuilderOnDraw;
             Service.GameNetwork.NetworkMessage += GameNetworkOnNetworkMessage;
 
-            var commandInfo = new CommandInfo((_, _) => Window.ShowDeathRecap = true) { HelpMessage = "Show the last death recap" };
+            var commandInfo = new CommandInfo((_, _) => Window.ShowDeathRecap = true) { HelpMessage = "Open the death recap window" };
             Service.CommandManager.AddHandler("/deathrecap", commandInfo);
             Service.CommandManager.AddHandler("/dr", commandInfo);
         }
 
         private void UiBuilderOnDraw() {
-            CleanCombatEvents();
+            var now = DateTime.Now;
+            if ((now - lastClean).TotalSeconds >= 1) {
+                CleanCombatEvents();
+                lastClean = now;
+            }
+
             Window.Draw();
         }
 
@@ -43,45 +51,51 @@ namespace DeathRecap {
             try {
                 switch ((Opcodes)opcode) {
                     case Opcodes.ActorControl: {
-                        if (targetactorid != Service.ObjectTable[0]?.ObjectId) return;
-                        var actorCtrl = (ActorControl142*)dataptr;
-                        if (actorCtrl->Category == ActorControlCategory.HoTDoT) {
-                            if (actorCtrl->Param2 == 4) {
-                                combatEvents.Add(new CombatEvent.HoT { Snapshot = CreateSnapshot(), Amount = actorCtrl->Param3, Id = actorCtrl->Param1 });
-                            } else if (actorCtrl->Param2 == 3) {
-                                combatEvents.Add(new CombatEvent.DoT { Snapshot = CreateSnapshot(), Amount = actorCtrl->Param3, Id = actorCtrl->Param1 });
+                        if (Service.ObjectTable.SearchById(targetactorid) is PlayerCharacter p) {
+                            var actorCtrl = (ActorControl142*)dataptr;
+                            if (actorCtrl->Category == ActorControlCategory.HoTDoT) {
+                                if (actorCtrl->Param2 == 4) {
+                                    combatEvents.AddEntry(targetactorid,
+                                        new CombatEvent.HoT { Snapshot = p.Snapshot(), Amount = actorCtrl->Param3, Id = actorCtrl->Param1 });
+                                } else if (actorCtrl->Param2 == 3) {
+                                    combatEvents.AddEntry(targetactorid,
+                                        new CombatEvent.DoT { Snapshot = p.Snapshot(), Amount = actorCtrl->Param3, Id = actorCtrl->Param1 });
+                                }
+                            } else if (actorCtrl->Category == ActorControlCategory.Death) {
+                                if (combatEvents.Remove(targetactorid, out var events)) {
+                                    var death = new Death { PlayerId = targetactorid, PlayerName = p.Name.TextValue, TimeOfDeath = DateTime.Now, Events = events };
+                                    DeathsPerPlayer.AddEntry(targetactorid,
+                                        death);
+                                    LastDeath = death;
+                                }
                             }
-                        } else if (actorCtrl->Category == ActorControlCategory.Death) {
-                            var death = combatEvents;
-                            combatEvents = new List<CombatEvent>();
-                            death.Add(new CombatEvent.Death { Snapshot = CreateSnapshot() });
-                            Deaths.Add(death);
-                            LastDeath = DateTime.Now;
                         }
 
                         break;
                     }
                     case Opcodes.EffectResult: {
-                        if (targetactorid != Service.ObjectTable[0]?.ObjectId) return;
-                        var message = (AddStatusEffect*)dataptr;
-                        var effects = (StatusEffectAddEntry*)message->Effects;
-                        var effectCount = Math.Min(message->EffectCount, 4u);
-                        for (uint j = 0; j < effectCount; j++) {
-                            var effect = effects[j];
-                            var effectId = effect.EffectId;
-                            if (effectId <= 0) continue;
-                            var source = Service.ObjectTable.SearchById(effect.SourceActorId)?.Name.TextValue;
-                            var status = Service.DataManager.Excel.GetSheet<Status>()?.GetRow(effectId);
+                        if (Service.ObjectTable.SearchById(targetactorid) is PlayerCharacter p) {
+                            var message = (AddStatusEffect*)dataptr;
+                            var effects = (StatusEffectAddEntry*)message->Effects;
+                            var effectCount = Math.Min(message->EffectCount, 4u);
+                            for (uint j = 0; j < effectCount; j++) {
+                                var effect = effects[j];
+                                var effectId = effect.EffectId;
+                                if (effectId <= 0) continue;
+                                var source = Service.ObjectTable.SearchById(effect.SourceActorId)?.Name.TextValue;
+                                var status = Service.DataManager.Excel.GetSheet<Status>()?.GetRow(effectId);
 
-                            combatEvents.Add(new CombatEvent.StatusEffect {
-                                Snapshot = CreateSnapshot(),
-                                Id = effectId,
-                                Icon = status?.Icon,
-                                Status = status?.Name.RawString,
-                                Description = status?.Description.DisplayedText(),
-                                Source = source,
-                                Duration = effect.Duration
-                            });
+                                combatEvents.AddEntry(targetactorid,
+                                    new CombatEvent.StatusEffect {
+                                        Snapshot = p.Snapshot(),
+                                        Id = effectId,
+                                        Icon = status?.Icon,
+                                        Status = status?.Name.RawString,
+                                        Description = status?.Description.DisplayedText(),
+                                        Source = source,
+                                        Duration = effect.Duration
+                                    });
+                            }
                         }
 
                         break;
@@ -137,53 +151,56 @@ namespace DeathRecap {
 
                         for (var i = 0; i < targets; i++) {
                             uint actionTargetId = (uint)(targetIds[i] & uint.MaxValue);
-                            if (actionTargetId != Service.ObjectTable[0]?.ObjectId) continue;
-                            for (var j = 0; j < 8; j++) {
-                                var actionIndex = i * 64 + j * 8;
-                                if (effectData[actionIndex] == 0) continue;
-                                var amount = (effectData[actionIndex + 7] << 8) + effectData[actionIndex + 6];
-                                if ((effectData[actionIndex + 5] & 0x40) == 0x40) {
-                                    amount += effectData[actionIndex + 4] << 16;
-                                }
+                            if (Service.ObjectTable.SearchById(actionTargetId) is PlayerCharacter p) {
+                                for (var j = 0; j < 8; j++) {
+                                    var actionIndex = i * 64 + j * 8;
+                                    if (effectData[actionIndex] == 0) continue;
+                                    var amount = (effectData[actionIndex + 7] << 8) + effectData[actionIndex + 6];
+                                    if ((effectData[actionIndex + 5] & 0x40) == 0x40) {
+                                        amount += effectData[actionIndex + 4] << 16;
+                                    }
 
-                                var actionType = ConvertActionType(effectData[actionIndex]);
-                                action ??= Service.DataManager.Excel.GetSheet<Action>()?.GetRow(actionId);
-                                gameObject ??= Service.ObjectTable.SearchById(targetactorid);
-                                source ??= gameObject?.Name.TextValue;
+                                    var actionType = ConvertActionType(effectData[actionIndex]);
+                                    action ??= Service.DataManager.Excel.GetSheet<Action>()?.GetRow(actionId);
+                                    gameObject ??= Service.ObjectTable.SearchById(targetactorid);
+                                    source ??= gameObject?.Name.TextValue;
 
-                                switch (actionType) {
-                                    case ActionType.Ability:
-                                    case ActionType.AbilityBlocked:
-                                    case ActionType.AbilityParried:
-                                        combatEvents.Add(new CombatEvent.DamageTaken {
-                                            Snapshot =
-                                                CreateSnapshot(true,
-                                                    additionalStatus ??= gameObject is BattleChara b
-                                                        ? b.StatusList.Select(s => s.StatusId).Where(s => s is 1203 or 1195 or 1193).ToList()
-                                                        : new List<uint>()),
-                                            Source = source,
-                                            Amount = amount,
-                                            Action = action?.Name?.RawString,
-                                            Icon = action?.Icon,
-                                            Crit = (effectData[actionIndex + 1] & 1) == 1,
-                                            DirectHit = (effectData[actionIndex + 1] & 2) == 2,
-                                            DamageType = (DamageType)(effectData[actionIndex + 2] & 0xF),
-                                            Parried = actionType == ActionType.AbilityParried,
-                                            Blocked = actionType == ActionType.AbilityBlocked,
-                                            DisplayType = message->EffectDisplayType
-                                        });
-                                        break;
-                                    case ActionType.Healing:
-                                        combatEvents.Add(new CombatEvent.Healed {
-                                            Snapshot = CreateSnapshot(true),
-                                            Source = source,
-                                            Amount = amount,
-                                            Action = action?.Name?.RawString,
-                                            Icon = action?.Icon,
-                                            Crit = (effectData[actionIndex + 2] & 1) == 1,
-                                            DirectHit = (effectData[actionIndex + 2] & 2) == 2
-                                        });
-                                        break;
+                                    switch (actionType) {
+                                        case ActionType.Ability:
+                                        case ActionType.AbilityBlocked:
+                                        case ActionType.AbilityParried:
+                                            combatEvents.AddEntry(actionTargetId,
+                                                new CombatEvent.DamageTaken {
+                                                    Snapshot =
+                                                        p.Snapshot(true,
+                                                            additionalStatus ??= gameObject is BattleChara b
+                                                                ? b.StatusList.Select(s => s.StatusId).Where(s => s is 1203 or 1195 or 1193).ToList()
+                                                                : new List<uint>()),
+                                                    Source = source,
+                                                    Amount = amount,
+                                                    Action = action?.Name?.RawString,
+                                                    Icon = action?.Icon,
+                                                    Crit = (effectData[actionIndex + 1] & 1) == 1,
+                                                    DirectHit = (effectData[actionIndex + 1] & 2) == 2,
+                                                    DamageType = (DamageType)(effectData[actionIndex + 2] & 0xF),
+                                                    Parried = actionType == ActionType.AbilityParried,
+                                                    Blocked = actionType == ActionType.AbilityBlocked,
+                                                    DisplayType = message->EffectDisplayType
+                                                });
+                                            break;
+                                        case ActionType.Healing:
+                                            combatEvents.AddEntry(actionTargetId,
+                                                new CombatEvent.Healed {
+                                                    Snapshot = p.Snapshot(true),
+                                                    Source = source,
+                                                    Amount = amount,
+                                                    Action = action?.Name?.RawString,
+                                                    Icon = action?.Icon,
+                                                    Crit = (effectData[actionIndex + 2] & 1) == 1,
+                                                    DirectHit = (effectData[actionIndex + 2] & 2) == 2
+                                                });
+                                            break;
+                                    }
                                 }
                             }
                         }
@@ -197,15 +214,35 @@ namespace DeathRecap {
         }
 
         private void CleanCombatEvents() {
-            if (combatEvents.Count > 500) {
-                combatEvents.RemoveRange(0, combatEvents.Count - 500);
-                while ((combatEvents[0].Snapshot.Time - DateTime.Now).TotalSeconds > 60) {
-                    combatEvents.RemoveAt(0);
+            var entriesToRemove = new List<uint>();
+            foreach (var (id, events) in combatEvents) {
+                if (events.Count > 200) {
+                    events.RemoveRange(0, events.Count - 100);
+                }
+
+                if ((DateTime.Now - events.LastOrDefault()?.Snapshot?.Time)?.TotalSeconds > 60) {
+                    entriesToRemove.Add(id);
                 }
             }
 
-            while (Deaths.Count > 10) {
-                Deaths.RemoveAt(0);
+            foreach (var entry in entriesToRemove) {
+                combatEvents.Remove(entry);
+            }
+
+            entriesToRemove.Clear();
+
+            foreach (var (id, death) in DeathsPerPlayer) {
+                if (death.Count > 10) {
+                    death.RemoveRange(0, death.Count - 10);
+                }
+
+                if ((DateTime.Now - death.LastOrDefault()?.TimeOfDeath)?.TotalMinutes > 60) {
+                    entriesToRemove.Add(id);
+                }
+            }
+
+            foreach (var entry in entriesToRemove) {
+                DeathsPerPlayer.Remove(entry);
             }
         }
 
@@ -227,20 +264,6 @@ namespace DeathRecap {
                 52 => ActionType.Buff,
                 _ => ActionType.Other
             };
-        }
-
-        private CombatEvent.EventSnapshot CreateSnapshot(bool snapEffects = false, IReadOnlyCollection<uint>? additionalStatus = null) {
-            var localPlayer = Service.ClientState.LocalPlayer;
-            var statusEffects = snapEffects ? localPlayer?.StatusList?.Select(s => s.StatusId).ToList() : null;
-            if (additionalStatus != null) statusEffects?.AddRange(additionalStatus);
-            var snapshot = new CombatEvent.EventSnapshot {
-                Time = DateTime.Now,
-                CurrentHp = localPlayer?.CurrentHp,
-                MaxHp = localPlayer?.MaxHp,
-                StatusEffects = statusEffects,
-                BarrierPercent = localPlayer?.Barrier()
-            };
-            return snapshot;
         }
 
 
