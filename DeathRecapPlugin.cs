@@ -31,7 +31,7 @@ namespace DeathRecap {
             pluginInterface.UiBuilder.Draw += UiBuilderOnDraw;
             Service.GameNetwork.NetworkMessage += GameNetworkOnNetworkMessage;
 
-            var commandInfo = new CommandInfo((_, _) => Window.ShowDeathRecap = true) { HelpMessage = "Open the death recap window" };
+            var commandInfo = new CommandInfo((_, _) => Window.ShowDeathRecap = !Window.ShowDeathRecap) { HelpMessage = "Open the death recap window" };
             Service.CommandManager.AddHandler("/deathrecap", commandInfo);
             Service.CommandManager.AddHandler("/dr", commandInfo);
         }
