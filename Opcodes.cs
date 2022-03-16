@@ -1,6 +1,6 @@
 namespace DeathRecap {
     public enum Opcodes : ushort {        
-        StatusEffectList = 0xbc,
+        StatusEffectList = 0x0275,
         StatusEffectList2 = 0x1ff,
         StatusEffectList3 = 0x2af,
         BossStatusEffectList = 0x7e,
@@ -9,20 +9,20 @@ namespace DeathRecap {
         Ability16 = 0xc1,
         Ability24 = 0x213,
         Ability32 = 0x38b,
-        ActorCast = 0x104,
-        EffectResult = 0xde,
-        EffectResultBasic = 0x2d9,
-        ActorControl = 0x22f,
-        ActorControlSelf = 0x6b,
-        ActorControlTarget = 0x191,
-        UpdateHpMpTp = 0x2c9,
-        PlayerSpawn = 0x142,
-        NpcSpawn = 0x32c,
+        ActorCast = 0x01F4,
+        EffectResult = 0x021A,
+        EffectResultBasic = 0x16A,
+        ActorControl = 0x0202,
+        ActorControlSelf = 0x0301,
+        ActorControlTarget = 0x0333,
+        UpdateHpMpTp = 0x0240,
+        PlayerSpawn = 0x03DC,
+        NpcSpawn = 0x032F,
         NpcSpawn2 = 0x8f,
-        ActorMove = 0x370,
-        ActorSetPos = 0x395,
-        ActorGauge = 0x3b5,
-        PresetWaymark = 0x1fe,
-        Waymark = 0x67
+        ActorMove = 0x03CB,
+        ActorSetPos = 0x033C,
+        ActorGauge = 0x0374,
+        PresetWaymark = 0x0074,
+        Waymark = 0x03BA
     }
 }
