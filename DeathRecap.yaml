@@ -11,3 +11,4 @@ description: |-
   - Barriers
   - Addle, Feint, Reprisal on damage source
 repo_url: https://github.com/Kouzukii/ffxiv-deathrecap
+dalamud_api_level: 6

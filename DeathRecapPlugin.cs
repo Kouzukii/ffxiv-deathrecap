@@ -82,6 +82,8 @@ namespace DeathRecap {
                                 var effect = effects[j];
                                 var effectId = effect.EffectId;
                                 if (effectId <= 0) continue;
+                                // TODO: Figure out what negative values mean
+                                if (effect.Duration < 0) continue;
                                 var source = Service.ObjectTable.SearchById(effect.SourceActorId)?.Name.TextValue;
                                 var status = Service.DataManager.Excel.GetSheet<Status>()?.GetRow(effectId);
 
