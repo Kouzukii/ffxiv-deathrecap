@@ -11,4 +11,10 @@ description: |-
   - Barriers
   - Addle, Feint, Reprisal on damage source
 repo_url: https://github.com/Kouzukii/ffxiv-deathrecap
+tags:
+  - death
+  - recap
+  - log
+category_tags:
+  - utility
 dalamud_api_level: 6
