@@ -2,8 +2,7 @@ using System.Runtime.InteropServices;
 
 namespace DeathRecap.Messages {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct ActorControl142
-    {
+    public struct ActorControl142 {
         public ActorControlCategory Category;
 
         public ushort Unknown1;

@@ -1,5 +1,5 @@
 namespace DeathRecap.Messages {
-    public enum ActorControlCategory : ushort {        
+    public enum ActorControlCategory : ushort {
         HoTDoT = 0x17,
         CancelAbility = 0x0f,
         Death = 0x06,

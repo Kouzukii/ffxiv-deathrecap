@@ -7,14 +7,19 @@ using Lumina.Text.Payloads;
 
 namespace DeathRecap {
     public static class Extensions {
-        public static string DisplayedText(this SeString str) => str.Payloads.Aggregate("", (a, p) => p is TextPayload ? a + p.RawString : a);
+        public static string DisplayedText(this SeString str) {
+            return str.Payloads.Aggregate("", (a, p) => p is TextPayload ? a + p.RawString : a);
+        }
 
-        public static unsafe byte? Barrier(this PlayerCharacter player) => *(byte*)(player?.Address + 0x19D9);
+        public static unsafe byte? Barrier(this PlayerCharacter player) {
+            return *(byte*)(player?.Address + 0x19D9);
+        }
 
         public static CombatEvent.EventSnapshot Snapshot(this PlayerCharacter player, bool snapEffects = false,
             IReadOnlyCollection<uint>? additionalStatus = null) {
             var statusEffects = snapEffects ? player?.StatusList?.Select(s => s.StatusId).ToList() : null;
-            if (additionalStatus != null) statusEffects?.AddRange(additionalStatus);
+            if (additionalStatus != null)
+                statusEffects?.AddRange(additionalStatus);
             var snapshot = new CombatEvent.EventSnapshot {
                 Time = DateTime.Now,
                 CurrentHp = player?.CurrentHp,

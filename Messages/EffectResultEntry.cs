@@ -2,8 +2,7 @@ using System.Runtime.InteropServices;
 
 namespace DeathRecap.Messages {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct StatusEffectAddEntry
-    {
+    public struct StatusEffectAddEntry {
         public byte EffectIndex;
 
         public byte Unknown1;
@@ -18,5 +17,4 @@ namespace DeathRecap.Messages {
 
         public uint SourceActorId;
     }
-
 }

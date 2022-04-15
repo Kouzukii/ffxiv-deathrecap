@@ -13,15 +13,13 @@ namespace DeathRecap {
             get {
                 var timeSpan = DateTime.Now.Subtract(TimeOfDeath);
 
-                if (timeSpan <= TimeSpan.FromSeconds(60)) {
+                if (timeSpan <= TimeSpan.FromSeconds(60))
                     return $"{timeSpan.Seconds} seconds ago";
-                }
 
-                if (timeSpan <= TimeSpan.FromMinutes(60)) {
-                    return timeSpan.Minutes > 1 ? $"about {timeSpan.Minutes} minutes ago" : "about a minute ago";
-                }
+                if (timeSpan <= TimeSpan.FromMinutes(60))
+                    return timeSpan.Minutes > 1 ? $"{timeSpan.Minutes} minutes ago" : "about a minute ago";
 
-                return timeSpan.Hours > 1 ? $"about {timeSpan.Hours} hours ago" : "about an hour ago";
+                return timeSpan.Hours > 1 ? $"{timeSpan.Hours} hours ago" : "about an hour ago";
             }
         }
     }
