@@ -1,5 +1,6 @@
 ﻿using System;
 using Dalamud.Configuration;
+using Dalamud.Game.Text;
 using Dalamud.Plugin;
 
 namespace DeathRecap {
@@ -21,6 +22,7 @@ namespace DeathRecap {
         public bool ShowTip { get; set; } = true;
         public int KeepCombatEventsForSeconds { get; set; } = 60;
         public int KeepDeathsForMinutes { get; set; } = 60;
+        public XivChatType ChatType { get; set; } = XivChatType.Debug;
         public int Version { get; set; } = 0;
 
         public static Configuration Get(DalamudPluginInterface pluginInterface) {

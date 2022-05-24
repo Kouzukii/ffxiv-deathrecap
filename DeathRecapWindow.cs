@@ -59,7 +59,7 @@ namespace DeathRecap {
                     ImGui.PopFont();
                     if (ImGui.IsItemHovered()) {
                         ImGui.BeginTooltip();
-                        ImGui.Text("Clear all events");
+                        ImGui.TextUnformatted("Clear all events");
                         ImGui.EndTooltip();
                     }
 
@@ -72,7 +72,7 @@ namespace DeathRecap {
                     ImGui.PopFont();
                     if (ImGui.IsItemHovered()) {
                         ImGui.BeginTooltip();
-                        ImGui.Text("Configuration");
+                        ImGui.TextUnformatted("Configuration");
                         ImGui.EndTooltip();
                     }
 
@@ -350,19 +350,50 @@ namespace DeathRecap {
         private void DrawHpColumn(CombatEvent e) {
             ImGui.TableNextColumn();
             ImGui.PushStyleColor(ImGuiCol.PlotHistogram, 0xFF058837);
-            var hpFract = e.Snapshot.CurrentHp / (float?)e.Snapshot.MaxHp ?? 0;
-            ImGui.ProgressBar(hpFract, new Vector2(-1, 0), $"{e.Snapshot.CurrentHp:N0}");
+            var hpFract = (float)e.Snapshot.CurrentHp / e.Snapshot.MaxHp;
+            var change = 0f;
+            var overkill = 0;
+
+            if (e is CombatEvent.Healed h) {
+                change = (float)h.Amount / e.Snapshot.MaxHp;
+                hpFract += change;
+            } else if (e is CombatEvent.DamageTaken dt) {
+                overkill = (int)(dt.Amount - e.Snapshot.CurrentHp);
+                change = -((float)dt.Amount / e.Snapshot.MaxHp);
+            }
+
+            var text = $"{e.Snapshot.CurrentHp:N0}";
+            ImGui.ProgressBar(hpFract, new Vector2(-1, 0), text);
             ImGui.PopStyleColor();
 
-            var itemMin = ImGui.GetItemRectMin();
-            var itemMax = ImGui.GetItemRectMax();
+            var bbMin = ImGui.GetItemRectMin();
+            var bbMax = ImGui.GetItemRectMax();
 
-            if (e.Snapshot.BarrierPercent is { } barrier) {
-                var barrierFract = barrier / 100f;
-                ImGui.GetWindowDrawList().PushClipRect(itemMin + new Vector2(0, (itemMax.Y - itemMin.Y) * 0.8f),
-                    itemMin + new Vector2((itemMax.X - itemMin.X) * barrierFract, itemMax.Y), true);
-                ImGui.GetWindowDrawList().AddRectFilled(itemMin, itemMax, 0xFF33FFFF, ImGui.GetStyle().FrameRounding);
-                ImGui.GetWindowDrawList().PopClipRect();
+            var style = ImGui.GetStyle();
+            var drawList = ImGui.GetWindowDrawList();
+            if (change is > 0 or < 0) {
+                drawList.PushClipRect(bbMin + new Vector2((bbMax.X - bbMin.X) * (hpFract - Math.Abs(change)), 0),
+                    bbMin + bbMax with { X = (float)Math.Round((bbMax.X - bbMin.X) * hpFract) }, true);
+                drawList.AddRectFilled(bbMin, bbMax, change > 0 ? 0x50FFFFFFu : 0x50000000u, style.FrameRounding);
+                drawList.PopClipRect();
+            }
+
+            if (e.Snapshot.BarrierPercent > 0) {
+                var barrierFract = e.Snapshot.BarrierPercent / 100f;
+                drawList.PushClipRect(bbMin + new Vector2(0, (bbMax.Y - bbMin.Y) * 0.8f), bbMin + bbMax with { X = (bbMax.X - bbMin.X) * barrierFract }, true);
+                drawList.AddRectFilled(bbMin, bbMax, 0xFF33FFFF, style.FrameRounding);
+                drawList.PopClipRect();
+            }
+
+            var textSiye = ImGui.CalcTextSize(text);
+            drawList.AddText(
+                new Vector2(Math.Clamp(bbMin.X + (bbMax.X - bbMin.X) * hpFract + style.ItemSpacing.X, bbMin.X, bbMax.X - textSiye.X - style.ItemInnerSpacing.X),
+                    bbMin.Y + (bbMax.Y - bbMin.Y - textSiye.Y) * 0.5f), 0xFFFFFFFF, text);
+
+            if (overkill > 0 && ImGui.IsItemHovered()) {
+                ImGui.BeginTooltip();
+                ImGui.TextUnformatted($"Overkill by {overkill:N0}");
+                ImGui.EndTooltip();
             }
         }
 

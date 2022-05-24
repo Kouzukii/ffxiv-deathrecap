@@ -140,9 +140,9 @@ namespace DeathRecap {
                                     var actionIndex = i * 64 + j * 8;
                                     if (effectData[actionIndex] == 0)
                                         continue;
-                                    var amount = (effectData[actionIndex + 7] << 8) + effectData[actionIndex + 6];
+                                    var amount = ((uint)effectData[actionIndex + 7] << 8) + effectData[actionIndex + 6];
                                     if ((effectData[actionIndex + 5] & 0x40) == 0x40)
-                                        amount += effectData[actionIndex + 4] << 16;
+                                        amount += (uint)effectData[actionIndex + 4] << 16;
 
                                     var actionType = ConvertActionType(effectData[actionIndex]);
                                     action ??= Service.DataManager.Excel.GetSheet<Action>()?.GetRow(actionId);
@@ -162,7 +162,7 @@ namespace DeathRecap {
                                                                 : new List<uint>()),
                                                     Source = source,
                                                     Amount = amount,
-                                                    Action = action?.Name?.RawString,
+                                                    Action = action?.ActionCategory.Row == 1 ? "Auto-attack" : action?.Name?.RawString,
                                                     Icon = action?.Icon,
                                                     Crit = (effectData[actionIndex + 1] & 1) == 1,
                                                     DirectHit = (effectData[actionIndex + 1] & 2) == 2,

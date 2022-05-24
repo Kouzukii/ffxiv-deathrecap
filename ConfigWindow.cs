@@ -1,3 +1,6 @@
+using System;
+using System.Linq;
+using Dalamud.Game.Text;
 using Dalamud.Interface;
 using ImGuiNET;
 
@@ -16,7 +19,7 @@ namespace DeathRecap {
                 return;
             var conf = plugin.Configuration;
             var bShowConfig = ShowConfig;
-            ImGui.SetNextWindowSize(ImGuiHelpers.ScaledVector2(580, 300));
+            ImGui.SetNextWindowSize(ImGuiHelpers.ScaledVector2(580, 320));
             if (ImGui.Begin("Death Recap Config", ref bShowConfig, ImGuiWindowFlags.NoCollapse)) {
                 ImGui.TextUnformatted("Capture Settings");
                 ImGui.Separator();
@@ -99,6 +102,20 @@ namespace DeathRecap {
                 ImGui.Separator();
                 ImGui.Spacing();
                 ImGui.TextUnformatted("General Settings");
+                ImGui.Spacing();
+                var chatTypes = Enum.GetValues<XivChatType>();
+                var chatType = Array.IndexOf(chatTypes, conf.ChatType);
+                ImGui.AlignTextToFramePadding();
+                ImGui.TextUnformatted("Chat Message Type");
+                ImGui.SameLine();
+                ImGui.SetNextItemWidth(150 * ImGuiHelpers.GlobalScale);
+                if (ImGui.Combo("##3", ref chatType, string.Join('\0', chatTypes.Select(t => t.GetDetails()?.FancyName ?? t.ToString())), 10)) {
+                    conf.ChatType = chatTypes[chatType];
+                    conf.Save();
+                }
+
+                ChatMessageTypeTooltip();
+
                 var bShowTip = conf.ShowTip;
                 if (ImGui.Checkbox("Show chat tip", ref bShowTip)) {
                     conf.ShowTip = bShowTip;
@@ -130,6 +147,15 @@ namespace DeathRecap {
 
                 if (!bShowConfig)
                     ShowConfig = false;
+            }
+        }
+
+        private void ChatMessageTypeTooltip() {
+            if (ImGui.IsItemHovered()) {
+                ImGui.BeginTooltip();
+                ImGui.TextUnformatted(
+                    "Filter category of the \"Chat Message\" death notification.\n\"Debug\" will show up in all chat tabs regardless of configuration.\nNote that this will only affect the way the notification is displayed to you. They will never be visible to others.");
+                ImGui.EndTooltip();
             }
         }
 

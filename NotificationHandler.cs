@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Numerics;
 using System.Text;
+using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface;
@@ -89,11 +90,36 @@ namespace DeathRecap {
                     popupDeath = death;
                     break;
                 case NotificationStyle.Chat:
-                    Service.ChatGui.Print(new SeString(chatLinkPayload, new UIForegroundPayload(1), new TextPayload(death.PlayerName),
-                        new UIForegroundPayload(0), new TextPayload(" has died "), new UIForegroundPayload(710), new TextPayload("[ Show Death Recap ]"),
-                        new UIForegroundPayload(0), RawPayload.LinkTerminator));
+                    var chatMsg = HasAuthor(plugin.Configuration.ChatType)
+                        ? new SeString(chatLinkPayload, new TextPayload("has died "), new UIForegroundPayload(710), new TextPayload("[ Show Death Recap ]"),
+                            new UIForegroundPayload(0), RawPayload.LinkTerminator)
+                        : new SeString(chatLinkPayload, new UIForegroundPayload(1), new TextPayload(death.PlayerName), new UIForegroundPayload(0),
+                            new TextPayload(" has died "), new UIForegroundPayload(710), new TextPayload("[ Show Death Recap ]"), new UIForegroundPayload(0),
+                            RawPayload.LinkTerminator);
+                    Service.ChatGui.PrintChat(new XivChatEntry {
+                        Message = chatMsg,
+                        Type = plugin.Configuration.ChatType,
+                        Name = death.PlayerName,
+                        SenderId = death.PlayerId
+                    });
                     break;
             }
         }
+
+        private static bool HasAuthor(XivChatType chatType) =>
+            chatType switch {
+                XivChatType.None => false,
+                XivChatType.Debug => false,
+                XivChatType.Urgent => false,
+                XivChatType.Notice => false,
+                XivChatType.StandardEmote => false,
+                XivChatType.Echo => false,
+                XivChatType.SystemError => false,
+                XivChatType.SystemMessage => false,
+                XivChatType.GatheringSystemMessage => false,
+                XivChatType.ErrorMessage => false,
+                XivChatType.RetainerSale => false,
+                _ => true
+            };
     }
 }

@@ -4,14 +4,14 @@ using DeathRecap.Messages;
 
 namespace DeathRecap {
     public record CombatEvent {
-        public EventSnapshot Snapshot { get; init; }
+        public EventSnapshot Snapshot { get; init; } = null!;
 
         public record EventSnapshot {
             public DateTime Time { get; init; }
-            public uint? CurrentHp { get; init; }
-            public uint? MaxHp { get; init; }
+            public uint CurrentHp { get; init; }
+            public uint MaxHp { get; init; }
             public List<uint>? StatusEffects { get; init; }
-            public uint? BarrierPercent { get; init; }
+            public uint BarrierPercent { get; init; }
         }
 
         public record StatusEffect : CombatEvent {
@@ -35,7 +35,7 @@ namespace DeathRecap {
 
         public record DamageTaken : CombatEvent {
             public string? Source { get; init; }
-            public int Amount { get; init; }
+            public uint Amount { get; init; }
             public string? Action { get; init; }
             public bool Crit { get; init; }
             public bool DirectHit { get; init; }
@@ -48,7 +48,7 @@ namespace DeathRecap {
 
         public record Healed : CombatEvent {
             public string? Source { get; init; }
-            public int Amount { get; init; }
+            public uint Amount { get; init; }
             public string? Action { get; init; }
             public bool Crit { get; init; }
             public bool DirectHit { get; init; }

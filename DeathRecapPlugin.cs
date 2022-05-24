@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Dalamud.Game;
 using Dalamud.Game.Command;
 using Dalamud.Plugin;
+using DeathRecap.Messages;
 
 namespace DeathRecap {
     public class DeathRecapPlugin : IDalamudPlugin {
@@ -69,59 +70,61 @@ namespace DeathRecap {
 
 #if DEBUG
         private void AddDummyData() {
-            DeathsPerPlayer.Add(0,
-                new List<Death> {
-                    new Death {
-                        PlayerId = 0,
-                        PlayerName = "Testing",
-                        TimeOfDeath = DateTime.Now,
-                        Events = new List<CombatEvent> {
-                            new CombatEvent.Healed {
-                                Action = "Heal",
-                                Amount = 1234,
-                                Crit = true,
-                                Icon = 406,
-                                Source = "White Mage",
-                                Snapshot = new CombatEvent.EventSnapshot {
-                                    Time = DateTime.Now, CurrentHp = 3000, MaxHp = 10000, StatusEffects = new List<uint> { 2, 3 }
-                                }
-                            },
-                            new CombatEvent.DamageTaken {
-                                Action = "Deal Damage",
-                                Amount = 9001,
-                                Crit = true,
-                                Parried = true,
-                                Icon = 61108,
-                                Source = "Boss",
-                                DamageType = DamageType.Slashing,
-                                DisplayType = ActionEffectDisplayType.ShowActionName,
-                                Snapshot = new CombatEvent.EventSnapshot {
-                                    Time = DateTime.Now,
-                                    BarrierPercent = 10,
-                                    CurrentHp = 3500,
-                                    MaxHp = 10000,
-                                    StatusEffects = new List<uint> { 2, 3 }
-                                }
-                            },
-                            new CombatEvent.DamageTaken {
-                                Action = "Deal Magic Damage",
-                                Amount = 15327,
-                                DirectHit = true,
-                                Icon = 3202,
-                                Source = "Boss",
-                                DamageType = DamageType.Magic,
-                                DisplayType = ActionEffectDisplayType.ShowActionName,
-                                Snapshot = new CombatEvent.EventSnapshot {
-                                    Time = DateTime.Now,
-                                    BarrierPercent = 30,
-                                    CurrentHp = 3700,
-                                    MaxHp = 10000,
-                                    StatusEffects = new List<uint> { 2, 3 }
-                                }
+            DeathsPerPlayer.Add(0, new List<Death> {
+                new Death {
+                    PlayerId = 0,
+                    PlayerName = "Testing",
+                    TimeOfDeath = DateTime.Now,
+                    Events = new List<CombatEvent> {
+                        new CombatEvent.Healed {
+                            Action = "Heal",
+                            Amount = 1234,
+                            Crit = true,
+                            Icon = 406,
+                            Source = "White Mage",
+                            Snapshot = new CombatEvent.EventSnapshot {
+                                Time = DateTime.Now,
+                                CurrentHp = 5000,
+                                MaxHp = 10000,
+                                StatusEffects = new List<uint> { 2, 3 }
+                            }
+                        },
+                        new CombatEvent.DamageTaken {
+                            Action = "Deal Damage",
+                            Amount = 9001,
+                            Crit = true,
+                            Parried = true,
+                            Icon = 61108,
+                            Source = "Boss",
+                            DamageType = DamageType.Slashing,
+                            DisplayType = ActionEffectDisplayType.ShowActionName,
+                            Snapshot = new CombatEvent.EventSnapshot {
+                                Time = DateTime.Now,
+                                BarrierPercent = 10,
+                                CurrentHp = 35000,
+                                MaxHp = 100000,
+                                StatusEffects = new List<uint> { 2, 3 }
+                            }
+                        },
+                        new CombatEvent.DamageTaken {
+                            Action = "Deal Magic Damage",
+                            Amount = 15327,
+                            DirectHit = true,
+                            Icon = 3202,
+                            Source = "Boss",
+                            DamageType = DamageType.Magic,
+                            DisplayType = ActionEffectDisplayType.ShowActionName,
+                            Snapshot = new CombatEvent.EventSnapshot {
+                                Time = DateTime.Now,
+                                BarrierPercent = 30,
+                                CurrentHp = 37000,
+                                MaxHp = 100000,
+                                StatusEffects = new List<uint> { 2, 3 }
                             }
                         }
                     }
-                });
+                }
+            });
             NotificationHandler.DisplayDeath(DeathsPerPlayer[0][0]);
         }
 #endif

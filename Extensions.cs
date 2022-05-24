@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Dalamud.Game.ClientState.Objects.SubKinds;
+using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using Lumina.Text;
 using Lumina.Text.Payloads;
 
@@ -11,21 +12,21 @@ namespace DeathRecap {
             return str.Payloads.Aggregate("", (a, p) => p is TextPayload ? a + p.RawString : a);
         }
 
-        public static unsafe byte? Barrier(this PlayerCharacter player) {
-            return *(byte*)(player?.Address + 0x19D9);
+        public static unsafe byte Barrier(this PlayerCharacter player) {
+            return ((Character*)player.Address)->ShieldValue;
         }
 
         public static CombatEvent.EventSnapshot Snapshot(this PlayerCharacter player, bool snapEffects = false,
             IReadOnlyCollection<uint>? additionalStatus = null) {
-            var statusEffects = snapEffects ? player?.StatusList?.Select(s => s.StatusId).ToList() : null;
+            var statusEffects = snapEffects ? player.StatusList.Select(s => s.StatusId).ToList() : null;
             if (additionalStatus != null)
                 statusEffects?.AddRange(additionalStatus);
             var snapshot = new CombatEvent.EventSnapshot {
                 Time = DateTime.Now,
-                CurrentHp = player?.CurrentHp,
-                MaxHp = player?.MaxHp,
+                CurrentHp = player.CurrentHp,
+                MaxHp = player.MaxHp,
                 StatusEffects = statusEffects,
-                BarrierPercent = player?.Barrier()
+                BarrierPercent = player.Barrier()
             };
             return snapshot;
         }

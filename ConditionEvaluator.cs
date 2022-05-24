@@ -1,29 +1,19 @@
-using System;
-using System.Collections.Generic;
 using Dalamud.Game.ClientState.Conditions;
 
 namespace DeathRecap {
     public class ConditionEvaluator {
-        private readonly HashSet<uint> partyLookup = new(8);
         private readonly DeathRecapPlugin plugin;
-        private DateTime partyLookupTime = DateTime.UnixEpoch;
 
         public ConditionEvaluator(DeathRecapPlugin plugin) {
             this.plugin = plugin;
         }
 
-        private bool LookupPartyMember(uint actorId) {
-            if ((DateTime.Now - partyLookupTime).TotalSeconds > 10) {
-                partyLookup.Clear();
-                for (var i = 0; i < 8; i++)
-                    if (Service.PartyList[i]?.ObjectId is { } id)
-                        partyLookup.Add(id);
-                    else
-                        break;
-                partyLookupTime = DateTime.Now;
-            }
-
-            return partyLookup.Contains(actorId);
+        private static bool LookupPartyMember(uint actorId) {
+            for (var i = 0; i < 8; i++)
+                if (Service.PartyList[i]?.ObjectId is { } id)
+                    if (actorId == id)
+                        return true;
+            return false;
         }
 
         public bool ShouldCapture(uint actorId) {
