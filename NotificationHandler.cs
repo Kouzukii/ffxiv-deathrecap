@@ -96,12 +96,7 @@ namespace DeathRecap {
                         : new SeString(chatLinkPayload, new UIForegroundPayload(1), new TextPayload(death.PlayerName), new UIForegroundPayload(0),
                             new TextPayload(" has died "), new UIForegroundPayload(710), new TextPayload("[ Show Death Recap ]"), new UIForegroundPayload(0),
                             RawPayload.LinkTerminator);
-                    Service.ChatGui.PrintChat(new XivChatEntry {
-                        Message = chatMsg,
-                        Type = plugin.Configuration.ChatType,
-                        Name = death.PlayerName,
-                        SenderId = death.PlayerId
-                    });
+                    Service.ChatGui.PrintChat(new XivChatEntry { Message = chatMsg, Type = plugin.Configuration.ChatType, Name = death.PlayerName });
                     break;
             }
         }
