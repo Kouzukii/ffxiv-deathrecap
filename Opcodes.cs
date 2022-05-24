@@ -5,7 +5,7 @@ namespace DeathRecap {
         Ability16 = 0x01b4,
         Ability24 = 0x03a0,
         Ability32 = 0x0168,
-        EffectResult = 0x93db,
+        EffectResult = 0x012a,
         ActorControl = 0x024b
     }
 }
