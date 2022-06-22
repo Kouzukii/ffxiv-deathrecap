@@ -26,7 +26,7 @@ namespace DeathRecap {
                             break;
                         if (Service.ObjectTable.SearchById(targetactorid) is PlayerCharacter p) {
                             var actorCtrl = (ActorControl142*)dataptr;
-                            if (actorCtrl->Category == ActorControlCategory.HoTDoT) {
+                            if (actorCtrl->Category == ActorControlCategory.Hot) {
                                 if (actorCtrl->Param2 == 4)
                                     combatEvents.AddEntry(targetactorid,
                                         new CombatEvent.HoT { Snapshot = p.Snapshot(), Amount = actorCtrl->Param3, Id = actorCtrl->Param1 });
@@ -195,7 +195,205 @@ namespace DeathRecap {
                 PluginLog.Error(e, "Failed to handle network packet");
             }
         }
+        public unsafe void ReceiveAbilityEffect(int sourceId, IntPtr sourceCharacter, IntPtr pos, IntPtr effectHeader, IntPtr effectArray, IntPtr effectTrail)
+        {
+            plugin.ReceiveAbilityHook.Original(sourceId, sourceCharacter, pos, effectHeader, effectArray, effectTrail);
+            var message = (ActionEffectHeader*)effectHeader;
+            ulong* targetIds = null;
+            byte* effectData = null;
+            var targetCount = *(byte*)(effectHeader + 0x21);
+            uint targets = message->EffectCount;
+            switch (targetCount)
+            {
+                case 1:
+                    targetIds = ((ActionEffect1*)effectHeader)->TargetIds;
+                    effectData = ((ActionEffect1*)effectHeader)->Effects;
+                    targets = Math.Min(targets, 1u);
+                    break;
+                case <= 8 and > 1:
+                    targetIds = ((ActionEffect8*)effectHeader)->TargetIds;
+                    effectData = ((ActionEffect8*)effectHeader)->Effects;
+                    targets = Math.Min(targets, 8u);
+                    break;
+                case > 8 and <= 16:
+                    targetIds = ((ActionEffect16*)effectHeader)->TargetIds;
+                    effectData = ((ActionEffect16*)effectHeader)->Effects;
+                    targets = Math.Min(targets, 16u);
+                    break;
+                case > 24 and <= 32:
+                    targetIds = ((ActionEffect24*)effectHeader)->TargetIds;
+                    effectData = ((ActionEffect24*)effectHeader)->Effects;
+                    targets = Math.Min(targets, 24u);
+                    break;
+                case > 32:
+                    targetIds = ((ActionEffect32*)effectHeader)->TargetIds;
+                    effectData = ((ActionEffect32*)effectHeader)->Effects;
+                    targets = Math.Min(targets, 32u);
+                    break;
+            }
 
+            if (targetIds == null || effectData == null || targets == 0)
+                return;
+
+            var actionId = message->EffectDisplayType switch
+            {
+                ActionEffectDisplayType.MountName => 218103808 + message->ActionId,
+                ActionEffectDisplayType.ShowItemName => 33554432 + message->ActionId,
+                _ => message->ActionAnimationId
+            };
+            Action? action = null;
+            string? source = null;
+            GameObject? gameObject = null;
+            List<uint>? additionalStatus = null;
+
+            for (var i = 0; i < targets; i++)
+            {
+                var actionTargetId = (uint)(targetIds[i] & uint.MaxValue);
+                if (!plugin.ConditionEvaluator.ShouldCapture(actionTargetId))
+                    continue;
+                if (Service.ObjectTable.SearchById(actionTargetId) is PlayerCharacter p)
+                    for (var j = 0; j < 8; j++)
+                    {
+                        var actionIndex = i * 64 + j * 8;
+                        if (effectData[actionIndex] == 0)
+                            continue;
+                        var amount = (effectData[actionIndex + 7] << 8) + effectData[actionIndex + 6];
+                        if ((effectData[actionIndex + 5] & 0x40) == 0x40)
+                            amount += effectData[actionIndex + 4] << 16;
+
+                        var actionType = ConvertActionType(effectData[actionIndex]);
+                        action ??= Service.DataManager.Excel.GetSheet<Action>()?.GetRow(actionId);
+                        gameObject ??= Service.ObjectTable.SearchById((uint)sourceId);
+                        source ??= gameObject?.Name.TextValue;
+
+                        switch (actionType)
+                        {
+                            case ActionType.Ability:
+                            case ActionType.AbilityBlocked:
+                            case ActionType.AbilityParried:
+                                combatEvents.AddEntry(actionTargetId,
+                                    new CombatEvent.DamageTaken
+                                    {
+                                        Snapshot =
+                                            p.Snapshot(true,
+                                                additionalStatus ??= gameObject is BattleChara b
+                                                    ? b.StatusList.Select(s => s.StatusId).Where(s => s is 1203 or 1195 or 1193).ToList()
+                                                    : new List<uint>()),
+                                        Source = source,
+                                        Amount = (uint)amount,
+                                        Action = action?.Name?.RawString,
+                                        Icon = action?.Icon,
+                                        Crit = (effectData[actionIndex + 1] & 1) == 1,
+                                        DirectHit = (effectData[actionIndex + 1] & 2) == 2,
+                                        DamageType = (DamageType)(effectData[actionIndex + 2] & 0xF),
+                                        Parried = actionType == ActionType.AbilityParried,
+                                        Blocked = actionType == ActionType.AbilityBlocked,
+                                        DisplayType = message->EffectDisplayType
+                                    });
+                                break;
+                            case ActionType.Healing:
+                                combatEvents.AddEntry(actionTargetId,
+                                    new CombatEvent.Healed
+                                    {
+                                        Snapshot = p.Snapshot(true),
+                                        Source = source,
+                                        Amount = (uint)amount,
+                                        Action = action?.Name?.RawString,
+                                        Icon = action?.Icon,
+                                        Crit = (effectData[actionIndex + 2] & 1) == 1,
+                                        DirectHit = (effectData[actionIndex + 2] & 2) == 2
+                                    });
+                                break;
+                        }
+                    }
+            }
+
+
+        }
+        public void ReceiveActorControlSelf(uint entityId, uint type, uint buffID, uint direct, uint damage, uint sourceId,
+            uint arg4, uint arg5, ulong targetId, byte a10)
+        {
+            plugin.ActorControlSelfHook.Original(entityId, type, buffID, direct, damage, sourceId, arg4, arg5, targetId, a10);
+
+            if (!plugin.ConditionEvaluator.ShouldCapture(entityId))
+                return;
+
+            if (Service.ObjectTable.SearchById(entityId) is PlayerCharacter p)
+            {
+
+
+                if ((ActorControlCategory)type == ActorControlCategory.DoT)
+                {
+
+                    combatEvents.AddEntry(sourceId,
+                        new CombatEvent.DoT { Snapshot = p.Snapshot(), Amount = damage, Id = buffID });
+                }
+                if ((ActorControlCategory)type == ActorControlCategory.Hot)
+                {
+                    combatEvents.AddEntry(sourceId,
+                            new CombatEvent.HoT { Snapshot = p.Snapshot(), Amount = damage, Id = damage });
+                }
+                if ((ActorControlCategory)type == ActorControlCategory.Death)
+                {
+                    if (combatEvents.Remove(entityId, out var events))
+                    {
+                        var death = new Death
+                        {
+                            PlayerId = entityId,
+                            PlayerName = p.Name.TextValue,
+                            TimeOfDeath = DateTime.Now,
+                            Events = events
+                        };
+                        plugin.DeathsPerPlayer.AddEntry(entityId, death);
+                        plugin.NotificationHandler.DisplayDeath(death);
+                    }
+                }
+            }
+        }
+        public unsafe void EffectResultDE(IntPtr ReplayModule, uint targetId, ushort packetId, IntPtr pkt, ulong pktSize)
+        {
+            plugin.EffectResultHook.Original(ReplayModule, targetId, packetId, pkt, pktSize);
+            if (pktSize == 96)
+            {
+                var message = (AddStatusEffect*)pkt;
+                if (!plugin.ConditionEvaluator.ShouldCapture(targetId))
+                    return;
+
+                if (Service.ObjectTable.SearchById(targetId) is PlayerCharacter p)
+                {
+
+
+                    var effects = (StatusEffectAddEntry*)message->Effects;
+
+                    var effectCount = Math.Min(message->EffectCount, 4u);
+                    for (uint j = 0; j < effectCount; j++)
+                    {
+                        var effect = effects[j];
+                        var effectId = effect.EffectId;
+                        if (effectId <= 0)
+                            continue;
+                        // TODO: Figure out what negative values mean
+                        if (effect.Duration < 0)
+                            continue;
+                        var source = Service.ObjectTable.SearchById(effect.SourceActorId)?.Name.TextValue;
+                        var status = Service.DataManager.Excel.GetSheet<Status>()?.GetRow(effectId);
+
+                        combatEvents.AddEntry(targetId, new CombatEvent.StatusEffect
+                        {
+                            Snapshot = p.Snapshot(),
+                            Id = effectId,
+                            Icon = status?.Icon,
+                            Status = status?.Name.RawString,
+                            Description = status?.Description.DisplayedText(),
+                            Source = source,
+                            Duration = effect.Duration
+                        });
+                    }
+                }
+            }
+
+
+        }
         private ActionType ConvertActionType(byte ability) {
             return ability switch {
                 1 => ActionType.Ability,

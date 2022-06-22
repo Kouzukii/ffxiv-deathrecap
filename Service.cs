@@ -54,6 +54,9 @@ namespace DeathRecap {
         [RequiredVersion("1.0")]
         internal static Framework Framework { get; private set; }
 
+        [PluginService]
+        public static SigScanner SigScanner { get; private set; }
+
         internal static void Initialize(DalamudPluginInterface pluginInterface) {
             pluginInterface.Create<Service>();
         }
