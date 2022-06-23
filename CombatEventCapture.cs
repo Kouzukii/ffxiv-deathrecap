@@ -350,12 +350,11 @@ namespace DeathRecap {
                 }
             }
         }
-        public unsafe void EffectResultDE(IntPtr ReplayModule, uint targetId, ushort packetId, IntPtr pkt, ulong pktSize)
+        public unsafe void ActionIntegrityDelegateDE(uint targetId, IntPtr _ActionIntegrityData, bool isReplay)
         {
-            plugin.EffectResultHook.Original(ReplayModule, targetId, packetId, pkt, pktSize);
-            if (pktSize == 96)
-            {
-                var message = (AddStatusEffect*)pkt;
+            plugin.ActionIntegrityDelegateHook.Original(targetId, _ActionIntegrityData, isReplay);
+
+                var message = (AddStatusEffect*)_ActionIntegrityData;
                 if (!plugin.ConditionEvaluator.ShouldCapture(targetId))
                     return;
 
@@ -390,7 +389,6 @@ namespace DeathRecap {
                         });
                     }
                 }
-            }
 
 
         }
