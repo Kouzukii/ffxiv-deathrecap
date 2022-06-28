@@ -24,12 +24,10 @@ namespace DeathRecap {
         }
 
         public record HoT : CombatEvent {
-            public uint Id { get; init; }
             public uint Amount { get; init; }
         }
 
         public record DoT : CombatEvent {
-            public uint Id { get; init; }
             public uint Amount { get; init; }
         }
 

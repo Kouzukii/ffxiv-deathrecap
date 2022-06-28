@@ -1,12 +1,10 @@
 using Dalamud.Data;
 using Dalamud.Game;
-using Dalamud.Game.ClientState;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Objects;
 using Dalamud.Game.ClientState.Party;
 using Dalamud.Game.Command;
 using Dalamud.Game.Gui;
-using Dalamud.Game.Network;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 
@@ -24,19 +22,11 @@ namespace DeathRecap {
 
         [PluginService]
         [RequiredVersion("1.0")]
-        internal static GameNetwork GameNetwork { get; private set; }
-
-        [PluginService]
-        [RequiredVersion("1.0")]
         internal static DataManager DataManager { get; private set; }
 
         [PluginService]
         [RequiredVersion("1.0")]
         internal static ChatGui ChatGui { get; private set; }
-
-        [PluginService]
-        [RequiredVersion("1.0")]
-        internal static ClientState ClientState { get; private set; }
 
         [PluginService]
         [RequiredVersion("1.0")]
@@ -55,7 +45,8 @@ namespace DeathRecap {
         internal static Framework Framework { get; private set; }
 
         [PluginService]
-        public static SigScanner SigScanner { get; private set; }
+        [RequiredVersion("1.0")]
+        internal static SigScanner SigScanner { get; private set; }
 
         internal static void Initialize(DalamudPluginInterface pluginInterface) {
             pluginInterface.Create<Service>();

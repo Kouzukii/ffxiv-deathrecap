@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 namespace DeathRecap {
     public record Death {
-        public uint PlayerId { get; internal set; }
-        public string PlayerName { get; internal set; } = null!;
-        public DateTime TimeOfDeath { get; internal set; }
+        public uint PlayerId { get; internal init; }
+        public string PlayerName { get; internal init; } = null!;
+        public DateTime TimeOfDeath { get; internal init; }
 
         public List<CombatEvent> Events { get; internal init; } = null!;
 

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using Dalamud.Game;
 using Dalamud.Game.Command;
-using Dalamud.Hooking;
 using Dalamud.Plugin;
 using DeathRecap.Messages;
 
@@ -24,14 +23,7 @@ namespace DeathRecap {
         public Dictionary<uint, List<Death>> DeathsPerPlayer { get; } = new();
 
         private DateTime lastClean = DateTime.Now;
-        public delegate void ReceiveAbilityDelegate(int sourceId, IntPtr sourceCharacter, IntPtr pos,
-    IntPtr effectHeader, IntPtr effectArray, IntPtr effectTrail);
-        public Hook<ReceiveAbilityDelegate> ReceiveAbilityHook;
-        public delegate void ActorControlSelfDelegate(uint entityId, uint id, uint arg0, uint arg1, uint arg2,
-           uint arg3, uint arg4, uint arg5, ulong targetId, byte a10);
-        public Hook<ActorControlSelfDelegate> ActorControlSelfHook;
-        public delegate void ActionIntegrityDelegate(uint targetId, IntPtr _ActionIntegrityData, bool isReplay);
-        public Hook<ActionIntegrityDelegate> ActionIntegrityDelegateHook;
+
         public DeathRecapPlugin(DalamudPluginInterface pluginInterface) {
             Service.Initialize(pluginInterface);
 
@@ -43,18 +35,7 @@ namespace DeathRecap {
             NotificationHandler = new NotificationHandler(this);
 
             pluginInterface.UiBuilder.Draw += UiBuilderOnDraw;
-            //Service.GameNetwork.NetworkMessage += CombatEventCapture.GameNetworkOnNetworkMessage;
             Service.Framework.Update += FrameworkOnUpdate;
-            ReceiveAbilityHook = new Hook<ReceiveAbilityDelegate>(
-        Service.SigScanner.ScanText("4C 89 44 24 ?? 55 56 57 41 54 41 55 41 56 48 8D 6C 24 ??"),
-        CombatEventCapture.ReceiveAbilityEffect);
-            ReceiveAbilityHook.Enable();
-            ActorControlSelfHook = new Hook<ActorControlSelfDelegate>(
-                    Service.SigScanner.ScanText("E8 ?? ?? ?? ?? 0F B7 0B 83 E9 64"), CombatEventCapture.ReceiveActorControlSelf);
-            ActorControlSelfHook.Enable();
-            ActionIntegrityDelegateHook = new Hook<ActionIntegrityDelegate>(
-                   Service.SigScanner.ScanText("48 8B C4 44 88 40 18 89 48 08"), CombatEventCapture.ActionIntegrityDelegateDE);
-            ActionIntegrityDelegateHook.Enable();
             var commandInfo = new CommandInfo((_, _) => Window.ShowDeathRecap = true) { HelpMessage = "Open the death recap window" };
             Service.CommandManager.AddHandler("/deathrecap", commandInfo);
             Service.CommandManager.AddHandler("/dr", commandInfo);
@@ -79,10 +60,7 @@ namespace DeathRecap {
         }
 
         public void Dispose() {
-            //Service.GameNetwork.NetworkMessage -= CombatEventCapture.GameNetworkOnNetworkMessage;
-            ReceiveAbilityHook.Disable();
-            ActionIntegrityDelegateHook.Disable();
-            ActorControlSelfHook.Disable();
+            CombatEventCapture.Dispose();
             Service.Framework.Update -= FrameworkOnUpdate;
             Service.CommandManager.RemoveHandler("/deathrecap");
             Service.CommandManager.RemoveHandler("/dr");

@@ -194,7 +194,7 @@ namespace DeathRecap {
 
                                 ImGui.TableNextColumn(); // Source
 
-                                DrawHpColumn(hot);
+                                DrawHpColumn(hot, total);
                                 break;
                             case CombatEvent.DoT dot:
                                 ImGui.TableNextRow();
@@ -347,20 +347,29 @@ namespace DeathRecap {
             }
         }
 
-        private void DrawHpColumn(CombatEvent e) {
+        private void DrawHpColumn(CombatEvent e, uint hot = 0) {
             ImGui.TableNextColumn();
             ImGui.PushStyleColor(ImGuiCol.PlotHistogram, 0xFF058837);
             var hpFract = (float)e.Snapshot.CurrentHp / e.Snapshot.MaxHp;
-            var change = 0f;
+            var change = hot > 0 ? (float)hot / e.Snapshot.MaxHp : 0;
             var overkill = 0;
 
-            if (e is CombatEvent.Healed h) {
-                change = (float)h.Amount / e.Snapshot.MaxHp;
-                hpFract += change;
-            } else if (e is CombatEvent.DamageTaken dt) {
-                overkill = (int)(dt.Amount - e.Snapshot.CurrentHp);
-                change = -((float)dt.Amount / e.Snapshot.MaxHp);
+            switch (e) {
+                case CombatEvent.Healed h:
+                    change = (float)h.Amount / e.Snapshot.MaxHp;
+                    break;
+                case CombatEvent.DamageTaken dt:
+                    overkill = (int)(dt.Amount - e.Snapshot.CurrentHp);
+                    change = -((float)dt.Amount / e.Snapshot.MaxHp);
+                    break;
+                case CombatEvent.DoT dot:
+                    overkill = (int)(dot.Amount - e.Snapshot.CurrentHp);
+                    change = -((float)dot.Amount / e.Snapshot.MaxHp);
+                    break;
             }
+
+            if (change > 0)
+                hpFract += change;
 
             var text = $"{e.Snapshot.CurrentHp:N0}";
             ImGui.ProgressBar(hpFract, new Vector2(-1, 0), text);
