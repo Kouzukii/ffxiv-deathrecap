@@ -1,11 +1,11 @@
 namespace DeathRecap {
     public enum Opcodes : ushort {
-        Ability1 = 0x00b5,
-        Ability8 = 0x014f,
-        Ability16 = 0x01b4,
-        Ability24 = 0x03a0,
-        Ability32 = 0x0168,
-        EffectResult = 0x012a,
-        ActorControl = 0x024b
+        Ability1 = 0x14c,
+        Ability8 = 0xf4,
+        Ability16 = 0x2b0,
+        Ability24 = 0x2f9,
+        Ability32 = 0x15b,
+        EffectResult = 0x24a,
+        ActorControl = 0x286
     }
 }

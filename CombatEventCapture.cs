@@ -26,23 +26,28 @@ namespace DeathRecap {
                             break;
                         if (Service.ObjectTable.SearchById(targetactorid) is PlayerCharacter p) {
                             var actorCtrl = (ActorControl142*)dataptr;
-                            if (actorCtrl->Category == ActorControlCategory.Hot) {
-                                if (actorCtrl->Param2 == 4)
-                                    combatEvents.AddEntry(targetactorid,
-                                        new CombatEvent.HoT { Snapshot = p.Snapshot(), Amount = actorCtrl->Param3, Id = actorCtrl->Param1 });
-                                else if (actorCtrl->Param2 == 3)
+                            switch (actorCtrl->Category) {
+                                case ActorControlCategory.DoT:
                                     combatEvents.AddEntry(targetactorid,
                                         new CombatEvent.DoT { Snapshot = p.Snapshot(), Amount = actorCtrl->Param3, Id = actorCtrl->Param1 });
-                            } else if (actorCtrl->Category == ActorControlCategory.Death) {
-                                if (combatEvents.Remove(targetactorid, out var events)) {
-                                    var death = new Death {
-                                        PlayerId = targetactorid,
-                                        PlayerName = p.Name.TextValue,
-                                        TimeOfDeath = DateTime.Now,
-                                        Events = events
-                                    };
-                                    plugin.DeathsPerPlayer.AddEntry(targetactorid, death);
-                                    plugin.NotificationHandler.DisplayDeath(death);
+                                    break;
+                                case ActorControlCategory.HoT:
+                                    combatEvents.AddEntry(targetactorid,
+                                        new CombatEvent.HoT { Snapshot = p.Snapshot(), Amount = actorCtrl->Param3, Id = actorCtrl->Param1 });
+                                    break;
+                                case ActorControlCategory.Death: {
+                                    if (combatEvents.Remove(targetactorid, out var events)) {
+                                        var death = new Death {
+                                            PlayerId = targetactorid,
+                                            PlayerName = p.Name.TextValue,
+                                            TimeOfDeath = DateTime.Now,
+                                            Events = events
+                                        };
+                                        plugin.DeathsPerPlayer.AddEntry(targetactorid, death);
+                                        plugin.NotificationHandler.DisplayDeath(death);
+                                    }
+
+                                    break;
                                 }
                             }
                         }
