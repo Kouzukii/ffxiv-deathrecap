@@ -34,7 +34,7 @@ namespace DeathRecap {
 
                     var notificationStyle = (int)conf.SelfNotification;
                     ImGui.TextUnformatted("Death Notification");
-                    if (ImGui.Combo("", ref notificationStyle, "None\0Chat Message\0Popup")) {
+                    if (ImGui.Combo("##2", ref notificationStyle, "None\0Chat Message\0Popup")) {
                         conf.SelfNotification = (NotificationStyle)notificationStyle;
                         conf.Save();
                     }
@@ -59,7 +59,7 @@ namespace DeathRecap {
 
                     var notificationStyle = (int)conf.PartyNotification;
                     ImGui.TextUnformatted("Death Notification");
-                    if (ImGui.Combo("", ref notificationStyle, "None\0Chat Message\0Popup")) {
+                    if (ImGui.Combo("##2", ref notificationStyle, "None\0Chat Message\0Popup")) {
                         conf.PartyNotification = (NotificationStyle)notificationStyle;
                         conf.Save();
                     }
@@ -128,7 +128,7 @@ namespace DeathRecap {
                 ImGui.TextUnformatted("Keep Events for (sec)");
                 ImGui.SameLine(ImGuiHelpers.GlobalScale * 140);
                 ImGui.SetNextItemWidth(ImGuiHelpers.GlobalScale * 150);
-                if (ImGui.InputInt("", ref keepEventsFor, 10)) {
+                if (ImGui.InputInt("##4", ref keepEventsFor, 10)) {
                     conf.KeepCombatEventsForSeconds = keepEventsFor;
                     conf.Save();
                 }
@@ -138,7 +138,7 @@ namespace DeathRecap {
                 ImGui.TextUnformatted("Keep Deaths for (min)");
                 ImGui.SameLine(ImGuiHelpers.GlobalScale * 140);
                 ImGui.SetNextItemWidth(ImGuiHelpers.GlobalScale * 150);
-                if (ImGui.InputInt("", ref keepDeathsFor, 10)) {
+                if (ImGui.InputInt("##5", ref keepDeathsFor, 10)) {
                     conf.KeepDeathsForMinutes = keepDeathsFor;
                     conf.Save();
                 }
