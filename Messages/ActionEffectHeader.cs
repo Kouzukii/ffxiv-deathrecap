@@ -1,34 +1,34 @@
 using System.Runtime.InteropServices;
 
-namespace DeathRecap.Messages {
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct ActionEffectHeader {
-        public uint AnimationTargetId;
+namespace DeathRecap.Messages;
 
-        public uint Unknown1;
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct ActionEffectHeader {
+    public uint AnimationTargetId;
 
-        public uint ActionId;
+    public uint Unknown1;
 
-        public uint GlobalEffectCounter;
+    public uint ActionId;
 
-        public float AnimationLockTime;
+    public uint GlobalEffectCounter;
 
-        public uint Unknown2;
+    public float AnimationLockTime;
 
-        public ushort HiddenAnimation;
+    public uint Unknown2;
 
-        public ushort Rotation;
+    public ushort HiddenAnimation;
 
-        public ushort ActionAnimationId;
+    public ushort Rotation;
 
-        public byte Variation;
+    public ushort ActionAnimationId;
 
-        public ActionEffectDisplayType EffectDisplayType;
+    public byte Variation;
 
-        public byte Unknown3;
+    public ActionEffectDisplayType EffectDisplayType;
 
-        public byte EffectCount;
+    public byte Unknown3;
 
-        public ushort Unknown4;
-    }
+    public byte EffectCount;
+
+    public ushort Unknown4;
 }

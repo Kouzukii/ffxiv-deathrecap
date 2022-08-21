@@ -1,28 +1,28 @@
 using System.Runtime.InteropServices;
 
-namespace DeathRecap.Messages {
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct AddStatusEffect {
-        public uint Unknown1;
+namespace DeathRecap.Messages;
 
-        public uint RelatedActionSequence;
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct AddStatusEffect {
+    public uint Unknown1;
 
-        public uint ActorId;
+    public uint RelatedActionSequence;
 
-        public uint CurrentHp;
+    public uint ActorId;
 
-        public uint MaxHp;
+    public uint CurrentHp;
 
-        public ushort CurrentMp;
+    public uint MaxHp;
 
-        public ushort Unknown3;
+    public ushort CurrentMp;
 
-        public byte DamageShield;
+    public ushort Unknown3;
 
-        public byte EffectCount;
+    public byte DamageShield;
 
-        public ushort Unknown6;
+    public byte EffectCount;
 
-        public unsafe fixed byte Effects[64];
-    }
+    public ushort Unknown6;
+
+    public unsafe fixed byte Effects[64];
 }

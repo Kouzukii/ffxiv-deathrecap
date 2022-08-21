@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <PlatformTarget>x64</PlatformTarget>
-        <TargetFramework>net5.0-windows</TargetFramework>
+        <TargetFramework>net6.0-windows</TargetFramework>
         <LangVersion>latest</LangVersion>
         <Platforms>x64</Platforms>
         <Configurations>Debug;Release</Configurations>
@@ -12,23 +12,21 @@
         <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
         <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <AssemblyVersion>1.8.0.0</AssemblyVersion>
-        <FileVersion>1.8.0.0</FileVersion>
+        <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+        <AssemblyVersion>1.8.0.1</AssemblyVersion>
+        <FileVersion>1.8.0.1</FileVersion>
     </PropertyGroup>
 
     <!-- Dalamud Configuration -->
     <PropertyGroup>
-        <DalamudVersion>dev</DalamudVersion>
-        <DalamudLocal>../dalamud/bin/Debug</DalamudLocal>
-        <DalamudXIVLauncher>$(APPDATA)\XIVLauncher\addon\Hooks\$(DalamudVersion)</DalamudXIVLauncher>
+        <DalamudLibPath>$(appdata)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
     </PropertyGroup>
 
     <!-- Assembly Reference Locations -->
     <PropertyGroup>
         <AssemblySearchPaths>
             $(AssemblySearchPaths);
-            $(DalamudLocal);
-            $(DalamudXIVLauncher);
+            $(DalamudLibPath);
         </AssemblySearchPaths>
     </PropertyGroup>
 

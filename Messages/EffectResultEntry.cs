@@ -1,20 +1,20 @@
 using System.Runtime.InteropServices;
 
-namespace DeathRecap.Messages {
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct StatusEffectAddEntry {
-        public byte EffectIndex;
+namespace DeathRecap.Messages;
 
-        public byte Unknown1;
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct StatusEffectAddEntry {
+    public byte EffectIndex;
 
-        public ushort EffectId;
+    public byte Unknown1;
 
-        public ushort Unknown2;
+    public ushort EffectId;
 
-        public ushort Unknown3;
+    public ushort Unknown2;
 
-        public float Duration;
+    public ushort Unknown3;
 
-        public uint SourceActorId;
-    }
+    public float Duration;
+
+    public uint SourceActorId;
 }

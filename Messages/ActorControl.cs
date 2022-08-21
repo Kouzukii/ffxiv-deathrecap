@@ -1,18 +1,18 @@
 using System.Runtime.InteropServices;
 
-namespace DeathRecap.Messages {
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct ActorControl142 {
-        public ActorControlCategory Category;
+namespace DeathRecap.Messages;
 
-        public ushort Unknown1;
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct ActorControl142 {
+    public ActorControlCategory Category;
 
-        public uint Param1;
+    public ushort Unknown1;
 
-        public uint Param2;
+    public uint Param1;
 
-        public uint Param3;
+    public uint Param2;
 
-        public uint Param4;
-    }
+    public uint Param3;
+
+    public uint Param4;
 }

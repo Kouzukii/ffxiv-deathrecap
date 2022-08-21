@@ -1,53 +1,53 @@
 using Dalamud.Game.ClientState.Conditions;
 
-namespace DeathRecap {
-    public class ConditionEvaluator {
-        private readonly DeathRecapPlugin plugin;
+namespace DeathRecap;
 
-        public ConditionEvaluator(DeathRecapPlugin plugin) {
-            this.plugin = plugin;
-        }
+public class ConditionEvaluator {
+    private readonly DeathRecapPlugin plugin;
 
-        private static bool LookupPartyMember(uint actorId) {
-            for (var i = 0; i < 8; i++)
-                if (Service.PartyList[i]?.ObjectId is { } id)
-                    if (actorId == id)
-                        return true;
-            return false;
-        }
+    public ConditionEvaluator(DeathRecapPlugin plugin) {
+        this.plugin = plugin;
+    }
 
-        public bool ShouldCapture(uint actorId) {
-            if (plugin.Configuration.CaptureOthers)
-                return true;
+    private static bool LookupPartyMember(uint actorId) {
+        for (var i = 0; i < 8; i++)
+            if (Service.PartyList[i]?.ObjectId is { } id)
+                if (actorId == id)
+                    return true;
+        return false;
+    }
 
-            if (plugin.Configuration.CaptureSelf && actorId == Service.ObjectTable[0]?.ObjectId)
-                return true;
+    public bool ShouldCapture(uint actorId) {
+        if (plugin.Configuration.CaptureOthers)
+            return true;
 
-            if (plugin.Configuration.CaptureParty && LookupPartyMember(actorId))
-                return true;
+        if (plugin.Configuration.CaptureSelf && actorId == Service.ObjectTable[0]?.ObjectId)
+            return true;
 
-            return false;
-        }
+        if (plugin.Configuration.CaptureParty && LookupPartyMember(actorId))
+            return true;
 
-        public NotificationStyle GetNotificationType(uint actorId) {
-            if (actorId == Service.ObjectTable[0]?.ObjectId) {
-                if (!plugin.Configuration.SelfNotificationOnlyInstances || Service.Condition[ConditionFlag.BoundByDuty])
-                    return plugin.Configuration.SelfNotification;
+        return false;
+    }
 
-                return NotificationStyle.None;
-            }
-
-            if (LookupPartyMember(actorId)) {
-                if (!plugin.Configuration.PartyNotificationOnlyInstances || Service.Condition[ConditionFlag.BoundByDuty])
-                    return plugin.Configuration.PartyNotification;
-
-                return NotificationStyle.None;
-            }
-
-            if (!plugin.Configuration.OthersNotificationOnlyInstances || Service.Condition[ConditionFlag.BoundByDuty])
-                return plugin.Configuration.OthersNotification;
+    public NotificationStyle GetNotificationType(uint actorId) {
+        if (actorId == Service.ObjectTable[0]?.ObjectId) {
+            if (!plugin.Configuration.SelfNotificationOnlyInstances || Service.Condition[ConditionFlag.BoundByDuty])
+                return plugin.Configuration.SelfNotification;
 
             return NotificationStyle.None;
         }
+
+        if (LookupPartyMember(actorId)) {
+            if (!plugin.Configuration.PartyNotificationOnlyInstances || Service.Condition[ConditionFlag.BoundByDuty])
+                return plugin.Configuration.PartyNotification;
+
+            return NotificationStyle.None;
+        }
+
+        if (!plugin.Configuration.OthersNotificationOnlyInstances || Service.Condition[ConditionFlag.BoundByDuty])
+            return plugin.Configuration.OthersNotification;
+
+        return NotificationStyle.None;
     }
 }

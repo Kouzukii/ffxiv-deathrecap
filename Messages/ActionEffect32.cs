@@ -1,20 +1,20 @@
 using System.Runtime.InteropServices;
 
-namespace DeathRecap.Messages {
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct ActionEffect32 {
-        public ActionEffectHeader Header;
+namespace DeathRecap.Messages;
 
-        public uint Unknown1;
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct ActionEffect32 {
+    public ActionEffectHeader Header;
 
-        public ushort Unknown2;
+    public uint Unknown1;
 
-        public unsafe fixed byte Effects[2048];
+    public ushort Unknown2;
 
-        public ushort Unknown3;
+    public unsafe fixed byte Effects[2048];
 
-        public uint Unknown4;
+    public ushort Unknown3;
 
-        public unsafe fixed ulong TargetIds[32];
-    }
+    public uint Unknown4;
+
+    public unsafe fixed ulong TargetIds[32];
 }
