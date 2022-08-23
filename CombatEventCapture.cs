@@ -58,7 +58,7 @@ public class CombatEventCapture : IDisposable {
         // ffxiv_dx11.exe+98C4FE - 48 8D 05 132DE900     - lea rax,[ffxiv_dx11.exe+181F218]
         // ffxiv_dx11.exe+98C505 - F3 0F10 0D 176C5B01   - movss xmm1,[ffxiv_dx11.exe+1F43124] { (0.00) }
         receiveAbilityEffectHook = Hook<ReceiveAbilityDelegate>.FromAddress(
-            Service.SigScanner.ScanText("4C 89 44 24 ?? 55 56 57 41 54 41 55 41 56 48 8D 6C 24 ??"), ReceiveAbilityEffectDetour);
+            Service.SigScanner.ScanText("4C 89 44 24 ?? 55 56 41 54 41 55 41 56 41 57 48 8D 6C 24 ??"), ReceiveAbilityEffectDetour);
 
         // ffxiv_dx11.exe+6C3ED9 - E8 526B0600           - call ffxiv_dx11.exe+72AA30
         // ffxiv_dx11.exe+6C3EDE - 0FB7 0B               - movzx ecx,word ptr [rbx]
