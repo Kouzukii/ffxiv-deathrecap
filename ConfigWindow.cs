@@ -34,8 +34,8 @@ public class ConfigWindow {
                 }
 
                 var notificationStyle = (int)conf.SelfNotification;
-                ImGui.TextUnformatted("Death Notification");
-                if (ImGui.Combo("##2", ref notificationStyle, "None\0Chat Message\0Popup")) {
+                ImGui.TextUnformatted("On Death");
+                if (ImGui.Combo("##2", ref notificationStyle, "Do Nothing\0Chat Message\0Show Popup\0Open Recap")) {
                     conf.SelfNotification = (NotificationStyle)notificationStyle;
                     conf.Save();
                 }
@@ -59,8 +59,8 @@ public class ConfigWindow {
                 }
 
                 var notificationStyle = (int)conf.PartyNotification;
-                ImGui.TextUnformatted("Death Notification");
-                if (ImGui.Combo("##2", ref notificationStyle, "None\0Chat Message\0Popup")) {
+                ImGui.TextUnformatted("On Death");
+                if (ImGui.Combo("##2", ref notificationStyle, "Do Nothing\0Chat Message\0Show Popup\0Open Recap")) {
                     conf.PartyNotification = (NotificationStyle)notificationStyle;
                     conf.Save();
                 }
@@ -84,8 +84,8 @@ public class ConfigWindow {
                 }
 
                 var notificationStyle = (int)conf.OthersNotification;
-                ImGui.TextUnformatted("Death Notification");
-                if (ImGui.Combo("##2", ref notificationStyle, "None\0Chat Message\0Popup")) {
+                ImGui.TextUnformatted("On Death");
+                if (ImGui.Combo("##2", ref notificationStyle, "Do Nothing\0Chat Message\0Show Popup\0Open Recap")) {
                     conf.OthersNotification = (NotificationStyle)notificationStyle;
                     conf.Save();
                 }

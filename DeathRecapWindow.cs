@@ -26,8 +26,6 @@ public class DeathRecapWindow {
 
     private bool hasShownTip;
 
-    private int selectedDeath;
-
     public DeathRecapWindow(DeathRecapPlugin plugin) {
         this.plugin = plugin;
 
@@ -39,6 +37,8 @@ public class DeathRecapWindow {
     public bool ShowDeathRecap { get; internal set; }
 
     public uint SelectedPlayer { get; internal set; }
+
+    public int SelectedDeath { get; internal set; }
 
     public void Draw() {
         try {
@@ -79,8 +79,8 @@ public class DeathRecapWindow {
 
                 ImGui.Separator();
 
-                if (selectedDeath < 0 || selectedDeath >= deaths.Count)
-                    selectedDeath = 0;
+                if (SelectedDeath < 0 || SelectedDeath >= deaths.Count)
+                    SelectedDeath = 0;
 
                 ImGui.Columns(2);
                 ImGui.SetColumnWidth(0, 160 * ImGuiHelpers.GlobalScale);
@@ -89,14 +89,14 @@ public class DeathRecapWindow {
                 for (var index = deaths.Count - 1; index >= 0; index--) {
                     ImGui.PushID(index);
                     if (ImGuiComponents.IconButton(FontAwesomeIcon.Ban)) {
-                        if (deaths.Count - 1 - selectedDeath < index)
-                            selectedDeath--;
+                        if (deaths.Count - 1 - SelectedDeath < index)
+                            SelectedDeath--;
 
                         deaths.RemoveAt(index--);
                     } else {
                         ImGui.SameLine();
-                        if (ImGui.Selectable(deaths[index].Title, index == deaths.Count - 1 - selectedDeath))
-                            selectedDeath = deaths.Count - 1 - index;
+                        if (ImGui.Selectable(deaths[index].Title, index == deaths.Count - 1 - SelectedDeath))
+                            SelectedDeath = deaths.Count - 1 - index;
                     }
 
                     ImGui.PopID();
@@ -104,7 +104,7 @@ public class DeathRecapWindow {
 
                 ImGui.NextColumn();
 
-                DrawCombatEventTable(deaths.Count > selectedDeath ? deaths[deaths.Count - 1 - selectedDeath] : null);
+                DrawCombatEventTable(deaths.Count > SelectedDeath ? deaths[deaths.Count - 1 - SelectedDeath] : null);
 
                 ImGui.End();
 
@@ -397,9 +397,9 @@ public class DeathRecapWindow {
         }
 
         var textSiye = ImGui.CalcTextSize(text);
-        drawList.AddText(
-            new Vector2(Math.Clamp(bbMin.X + (bbMax.X - bbMin.X) * hpFract + style.ItemSpacing.X, bbMin.X, bbMax.X - textSiye.X - style.ItemInnerSpacing.X),
-                bbMin.Y + (bbMax.Y - bbMin.Y - textSiye.Y) * 0.5f), 0xFFFFFFFF, text);
+        drawList.AddText(new Vector2(
+            Math.Clamp(bbMin.X + (bbMax.X - bbMin.X) * hpFract + style.ItemSpacing.X, bbMin.X, bbMax.X - textSiye.X - style.ItemInnerSpacing.X),
+            bbMin.Y + (bbMax.Y - bbMin.Y - textSiye.Y) * 0.5f), 0xFFFFFFFF, text);
 
         if (overkill > 0 && ImGui.IsItemHovered()) {
             ImGui.BeginTooltip();

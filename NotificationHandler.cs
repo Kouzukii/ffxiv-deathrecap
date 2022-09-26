@@ -26,8 +26,11 @@ public class NotificationHandler {
         plugin.Window.ShowDeathRecap = true;
         if (msg.Payloads.ElementAtOrDefault(2) is TextPayload p)
             foreach (var deaths in plugin.DeathsPerPlayer.Values)
-                if (deaths.FirstOrDefault()?.PlayerName == p.Text)
+                if (deaths.FirstOrDefault()?.PlayerName == p.Text) {
                     plugin.Window.SelectedPlayer = deaths[0].PlayerId;
+                    plugin.Window.SelectedDeath = 0;
+                    break;
+                }
     }
 
     public void Draw() {
@@ -98,6 +101,11 @@ public class NotificationHandler {
                         new TextPayload(" has died "), new UIForegroundPayload(710), new TextPayload("[ Show Death Recap ]"), new UIForegroundPayload(0),
                         RawPayload.LinkTerminator);
                 Service.ChatGui.PrintChat(new XivChatEntry { Message = chatMsg, Type = plugin.Configuration.ChatType, Name = death.PlayerName });
+                break;
+            case NotificationStyle.OpenDeathRecap:
+                plugin.Window.ShowDeathRecap = true;
+                plugin.Window.SelectedPlayer = death.PlayerId;
+                plugin.Window.SelectedDeath = 0;
                 break;
         }
     }
