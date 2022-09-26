@@ -161,7 +161,8 @@ public class DeathRecapWindow {
 
     private void DrawCombatEventTable(Death? death) {
         if (ImGui.BeginTable("deathrecap", 6,
-                ImGuiTableFlags.Borders | ImGuiTableFlags.NoBordersInBody | ImGuiTableFlags.ScrollY | ImGuiTableFlags.Resizable)) {
+                ImGuiTableFlags.Borders | ImGuiTableFlags.NoBordersInBody | ImGuiTableFlags.ScrollY | ImGuiTableFlags.Resizable | ImGuiTableFlags.Reorderable |
+                ImGuiTableFlags.Hideable)) {
             ImGui.TableSetupColumn("Time", ImGuiTableColumnFlags.WidthFixed);
             ImGui.TableSetupColumn("Amount", ImGuiTableColumnFlags.WidthFixed);
             ImGui.TableSetupColumn("Ability");
