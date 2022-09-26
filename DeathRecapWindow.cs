@@ -46,7 +46,7 @@ public class DeathRecapWindow {
                 return;
             var bShowDeathRecap = ShowDeathRecap;
             ImGui.SetNextWindowSize(ImGuiHelpers.ScaledVector2(800, 350), ImGuiCond.FirstUseEver);
-            if (ImGui.Begin("Death Recap", ref bShowDeathRecap, ImGuiWindowFlags.NoCollapse)) {
+            if (ImGui.Begin("Death Recap", ref bShowDeathRecap)) {
                 if (!plugin.DeathsPerPlayer.TryGetValue(SelectedPlayer, out var deaths))
                     deaths = new List<Death>();
 
