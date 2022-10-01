@@ -45,10 +45,6 @@ internal class Service {
     [RequiredVersion("1.0")]
     internal static Framework Framework { get; private set; }
 
-    [PluginService]
-    [RequiredVersion("1.0")]
-    internal static SigScanner SigScanner { get; private set; }
-
     internal static void Initialize(DalamudPluginInterface pluginInterface) {
         pluginInterface.Create<Service>();
     }

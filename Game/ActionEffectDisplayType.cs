@@ -1,4 +1,4 @@
-namespace DeathRecap.Messages;
+namespace DeathRecap.Game;
 
 public enum ActionEffectDisplayType : byte {
     HideActionName = 0,

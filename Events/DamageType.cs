@@ -1,4 +1,4 @@
-namespace DeathRecap;
+namespace DeathRecap.Events;
 
 public enum DamageType {
     Unknown,

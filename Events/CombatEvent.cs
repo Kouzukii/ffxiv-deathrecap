@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using DeathRecap.Messages;
+using DeathRecap.Game;
 
-namespace DeathRecap;
+namespace DeathRecap.Events;
 
 public record CombatEvent {
     public EventSnapshot Snapshot { get; init; } = null!;
@@ -22,6 +22,7 @@ public record CombatEvent {
         public float Duration { get; init; }
         public string? Status { get; init; }
         public string? Description { get; init; }
+        public StatusCategory Category { get; init; }
     }
 
     public record HoT : CombatEvent {
@@ -35,7 +36,7 @@ public record CombatEvent {
     public record DamageTaken : CombatEvent {
         public string? Source { get; init; }
         public uint Amount { get; init; }
-        public string? Action { get; init; }
+        public string Action { get; init; } = null!;
         public bool Crit { get; init; }
         public bool DirectHit { get; init; }
         public DamageType DamageType { get; init; }
@@ -48,9 +49,8 @@ public record CombatEvent {
     public record Healed : CombatEvent {
         public string? Source { get; init; }
         public uint Amount { get; init; }
-        public string? Action { get; init; }
+        public string Action { get; init; } = null!;
         public bool Crit { get; init; }
-        public bool DirectHit { get; init; }
         public ushort? Icon { get; init; }
     }
 }

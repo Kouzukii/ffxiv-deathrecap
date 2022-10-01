@@ -1,4 +1,4 @@
-namespace DeathRecap.Messages;
+namespace DeathRecap.Game;
 
 public enum ActorControlCategory : ushort {
     DoT = 0x17,

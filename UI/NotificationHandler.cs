@@ -6,9 +6,10 @@ using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface;
+using DeathRecap.Events;
 using ImGuiNET;
 
-namespace DeathRecap;
+namespace DeathRecap.UI;
 
 public class NotificationHandler {
     private readonly DalamudLinkPayload chatLinkPayload;

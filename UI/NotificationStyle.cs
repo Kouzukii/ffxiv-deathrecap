@@ -1,4 +1,4 @@
-namespace DeathRecap;
+namespace DeathRecap.UI;
 
 public enum NotificationStyle {
     None = 0,

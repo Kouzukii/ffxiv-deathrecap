@@ -1,4 +1,4 @@
-namespace DeathRecap;
+namespace DeathRecap.Events;
 
 internal enum ActionType {
     Ability,

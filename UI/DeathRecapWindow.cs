@@ -1,0 +1,774 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
+using Dalamud.Interface;
+using Dalamud.Logging;
+using DeathRecap.Events;
+using DeathRecap.Game;
+using ImGuiNET;
+using ImGuiScene;
+using Lumina.Excel.GeneratedSheets;
+using Newtonsoft.Json;
+
+namespace DeathRecap.UI;
+
+public class DeathRecapWindow {
+    private const uint ColorOverlayHealed = 0x50FFFFFFu;
+    private const uint ColorOverlayDamageTaken = 0x50000000u;
+    private const uint ColorBarrier = 0xFF33FFFF;
+    private const uint ColorHp = 0xFF058837;
+    private const uint ColorHealingText = 0xFF99fad1;
+    private const uint ColorDamage = 0xFF6680e6;
+    private const uint ColorMagicDamage = 0xFFbe9925;
+    private const uint ColorPhysicalDamage = 0xFF4aa3ff;
+    private const uint ColorAction = 0xFFf0a8b8;
+    private const uint ColorGrey = 0xFF808080;
+    private const uint ColorDarkGrey = 0xFF303030;
+
+    private readonly DeathRecapPlugin plugin;
+
+    private readonly Dictionary<ushort, TextureWrap> textures = new();
+
+    private bool hasShownTip;
+
+    public DeathRecapWindow(DeathRecapPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    public bool ShowDeathRecap { get; internal set; }
+
+    public uint SelectedPlayer { get; internal set; }
+
+    public int SelectedDeath { get; internal set; }
+
+    public void Draw() {
+        try {
+            if (!ShowDeathRecap)
+                return;
+            var bShowDeathRecap = ShowDeathRecap;
+            ImGui.SetNextWindowSize(ImGuiHelpers.ScaledVector2(800, 350), ImGuiCond.FirstUseEver);
+            if (ImGui.Begin("Death Recap", ref bShowDeathRecap)) {
+                if (!plugin.DeathsPerPlayer.TryGetValue(SelectedPlayer, out var deaths))
+                    deaths = new List<Death>();
+
+                if (SelectedDeath < 0 || SelectedDeath >= deaths.Count)
+                    SelectedDeath = 0;
+
+                var death = deaths.Count > SelectedDeath ? deaths[deaths.Count - 1 - SelectedDeath] : null;
+
+                DrawPlayerSelection(deaths.FirstOrDefault()?.PlayerName);
+
+                ImGui.PushFont(UiBuilder.IconFont);
+                ImGui.SameLine(0, 15);
+                if (plugin.Configuration.ShowCombatHistogram)
+                    ImGui.BeginDisabled();
+                if (ImGui.Button(FontAwesomeIcon.Filter.ToIconString()))
+                    ImGui.OpenPopup("death_recap_filter");
+                ImGui.PopFont();
+                if (ImGui.IsItemHovered()) {
+                    ImGui.BeginTooltip();
+                    ImGui.TextUnformatted("Filter events");
+                    ImGui.EndTooltip();
+                }
+
+                if (plugin.Configuration.ShowCombatHistogram)
+                    ImGui.EndDisabled();
+
+                if (ImGui.BeginPopup("death_recap_filter")) {
+                    ImGui.TextUnformatted("Row filters");
+
+                    void FlagCheckbox(string label, EventFilter flag) {
+                        var b = plugin.Configuration.EventFilter.HasFlag(flag);
+                        if (!ImGui.Checkbox(label, ref b))
+                            return;
+                        if (b)
+                            plugin.Configuration.EventFilter |= flag;
+                        else
+                            plugin.Configuration.EventFilter &= ~flag;
+                        plugin.Configuration.Save();
+                    }
+
+                    FlagCheckbox("Show damage", EventFilter.Damage);
+                    FlagCheckbox("Show healing", EventFilter.Healing);
+                    FlagCheckbox("Show debuffs", EventFilter.Debuffs);
+                    FlagCheckbox("Show buffs", EventFilter.Buffs);
+                    ImGui.EndPopup();
+                }
+
+                ImGui.PushFont(UiBuilder.IconFont);
+                ImGui.SameLine(0, 15);
+                if (ImGui.Button((plugin.Configuration.ShowCombatHistogram ? FontAwesomeIcon.Table : FontAwesomeIcon.ChartBar).ToIconString())) {
+                    plugin.Configuration.ShowCombatHistogram ^= true;
+                    plugin.Configuration.Save();
+                }
+
+                ImGui.PopFont();
+                if (ImGui.IsItemHovered()) {
+                    ImGui.BeginTooltip();
+                    ImGui.TextUnformatted(plugin.Configuration.ShowCombatHistogram ? "Switch to detailed view" : "Switch to histogram (experimental)");
+                    ImGui.EndTooltip();
+                }
+
+                ImGui.PushFont(UiBuilder.IconFont);
+                ImGui.SameLine(0, 15);
+                if (ImGui.Button(FontAwesomeIcon.Trash.ToIconString()))
+                    ImGui.OpenPopup("death_recap_clearall");
+
+                ImGui.PopFont();
+                if (ImGui.IsItemHovered()) {
+                    ImGui.BeginTooltip();
+                    ImGui.TextUnformatted("Clear all events");
+                    ImGui.EndTooltip();
+                }
+
+                if (ImGui.BeginPopup("death_recap_clearall")) {
+                    ImGui.TextUnformatted("Are you sure?");
+                    if (ImGui.Button("Yes")) {
+                        plugin.DeathsPerPlayer.Clear();
+                        ImGui.CloseCurrentPopup();
+                    }
+
+                    ImGui.SameLine();
+                    if (ImGui.Button("No")) {
+                        ImGui.CloseCurrentPopup();
+                    }
+
+                    ImGui.EndPopup();
+                }
+
+#if DEBUG
+                ImGui.PushFont(UiBuilder.IconFont);
+                ImGui.SameLine(0, 15);
+                if (ImGui.Button(FontAwesomeIcon.Copy.ToIconString())) {
+                    ImGui.SetClipboardText(JsonConvert.SerializeObject(death));
+                }
+
+                ImGui.PopFont();
+                if (ImGui.IsItemHovered()) {
+                    ImGui.BeginTooltip();
+                    ImGui.TextUnformatted("Copy combat events as JSON");
+                    ImGui.EndTooltip();
+                }
+#endif
+
+                ImGui.PushFont(UiBuilder.IconFont);
+                var config = FontAwesomeIcon.Cog.ToIconString();
+                ImGui.SameLine(ImGui.GetWindowContentRegionMax().X - ImGui.GetWindowContentRegionMin().X - ImGuiHelpers.GetButtonSize(config).X);
+                if (ImGui.Button(config))
+                    plugin.ConfigWindow.ShowConfig = true;
+
+                ImGui.PopFont();
+                if (ImGui.IsItemHovered()) {
+                    ImGui.BeginTooltip();
+                    ImGui.TextUnformatted("Configuration");
+                    ImGui.EndTooltip();
+                }
+
+                ImGui.Separator();
+
+                ImGui.Columns(2);
+                ImGui.SetColumnWidth(0, 160 * ImGuiHelpers.GlobalScale);
+                ImGui.TextUnformatted("Deaths");
+                ImGui.Spacing();
+                for (var index = deaths.Count - 1; index >= 0; index--) {
+                    ImGui.PushID(index);
+                    if (ImGui.Selectable(deaths[index].Title, index == deaths.Count - 1 - SelectedDeath))
+                        SelectedDeath = deaths.Count - 1 - index;
+                    ImGui.PopID();
+                }
+
+                ImGui.NextColumn();
+
+                if (plugin.Configuration.ShowCombatHistogram)
+                    DrawCombatHistogram(death);
+                else
+                    DrawCombatEventTable(death);
+
+                ImGui.End();
+
+                if (!bShowDeathRecap) {
+                    ShowDeathRecap = false;
+                    if (plugin.Configuration.ShowTip && !hasShownTip) {
+                        Service.ChatGui.Print("[DeathRecap] Tip: You can reopen this window using /dr or /deathrecap");
+                        hasShownTip = true;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            PluginLog.Error(e, "Failed to draw window");
+        }
+    }
+
+    private void DrawPlayerSelection(string? selectedPlayerName) {
+        void DrawItem(IEnumerable<Death> pdeaths, uint id) {
+            if (pdeaths.FirstOrDefault()?.PlayerName is not { } name)
+                return;
+            if (ImGui.Selectable(name, id == SelectedPlayer))
+                SelectedPlayer = id;
+        }
+
+        ImGui.AlignTextToFramePadding();
+        ImGui.TextUnformatted("Player");
+        ImGui.SameLine();
+        ImGui.SetNextItemWidth(200 * ImGuiHelpers.GlobalScale);
+        if (ImGui.BeginCombo("", selectedPlayerName)) {
+            var processed = new HashSet<uint>();
+
+            if (Service.PartyList.Length > 0) {
+                foreach (var pmem in Service.PartyList) {
+                    var id = pmem.ObjectId;
+                    if (processed.Contains(id) || !plugin.DeathsPerPlayer.TryGetValue(id, out var pdeaths))
+                        continue;
+                    DrawItem(pdeaths, id);
+                    processed.Add(id);
+                }
+            } else if (Service.ObjectTable[0]?.ObjectId is { } localPlayerId && plugin.DeathsPerPlayer.TryGetValue(localPlayerId, out var pdeaths)) {
+                DrawItem(pdeaths, localPlayerId);
+                processed.Add(localPlayerId);
+            }
+
+            foreach (var (id, pdeaths) in plugin.DeathsPerPlayer) {
+                if (processed.Contains(id))
+                    continue;
+                DrawItem(pdeaths, id);
+            }
+
+            ImGui.EndCombo();
+        }
+    }
+
+    private void DrawCombatEventTable(Death? death) {
+        if (ImGui.BeginTable("deathrecap", 6,
+                ImGuiTableFlags.Borders | ImGuiTableFlags.NoBordersInBody | ImGuiTableFlags.ScrollY | ImGuiTableFlags.Resizable | ImGuiTableFlags.Reorderable |
+                ImGuiTableFlags.Hideable)) {
+            ImGui.TableSetupColumn("Time", ImGuiTableColumnFlags.WidthFixed);
+            ImGui.TableSetupColumn("Amount", ImGuiTableColumnFlags.WidthFixed);
+            ImGui.TableSetupColumn("Ability");
+            ImGui.TableSetupColumn("Source");
+            ImGui.TableSetupColumn("HP Before");
+            ImGui.TableSetupColumn("Status Effects");
+            ImGui.TableHeadersRow();
+
+            if (death != null)
+                for (var i = death.Events.Count - 1; i >= 0; i--)
+                    switch (death.Events[i]) {
+                        case CombatEvent.HoT hot:
+                            if (!plugin.Configuration.EventFilter.HasFlag(EventFilter.Healing))
+                                continue;
+                            ImGui.TableNextRow();
+
+                            DrawTimeColumn(hot, death.TimeOfDeath);
+
+                            var total = hot.Amount;
+                            while (i > 0 && death.Events[i - 1] is CombatEvent.HoT h) {
+                                hot = h;
+                                total += h.Amount;
+                                i--;
+                            }
+
+                            ImGui.TableNextColumn(); // Amount
+                            ImGui.AlignTextToFramePadding();
+                            ImGuiHelper.TextColored(ColorHealingText, $"+{total:N0}");
+
+                            ImGui.TableNextColumn(); // Ability
+                            ImGui.AlignTextToFramePadding();
+                            ImGui.TextUnformatted("Regen");
+
+                            ImGui.TableNextColumn(); // Source
+
+                            DrawHpColumn(hot, total);
+                            break;
+                        case CombatEvent.DoT dot:
+                            if (!plugin.Configuration.EventFilter.HasFlag(EventFilter.Damage))
+                                continue;
+                            ImGui.TableNextRow();
+
+                            DrawTimeColumn(dot, death.TimeOfDeath);
+
+                            ImGui.TableNextColumn(); // Amount
+                            ImGui.AlignTextToFramePadding();
+                            ImGuiHelper.TextColored(ColorDamage, $"-{dot.Amount:N0}");
+
+                            ImGui.TableNextColumn(); // Ability
+                            ImGui.AlignTextToFramePadding();
+                            ImGui.TextUnformatted("DoT damage");
+
+                            ImGui.TableNextColumn(); // Source
+
+                            DrawHpColumn(dot);
+                            break;
+                        case CombatEvent.DamageTaken dt: {
+                            if (!plugin.Configuration.EventFilter.HasFlag(EventFilter.Damage))
+                                continue;
+                            ImGui.TableNextRow();
+
+                            DrawTimeColumn(dt, death.TimeOfDeath);
+
+                            ImGui.TableNextColumn(); // Amount
+                            ImGui.AlignTextToFramePadding();
+                            var text = $"-{dt.Amount:N0}{(dt.Crit ? dt.DirectHit ? "!!" : "!" : "")}";
+                            ImGuiHelper.TextColored(dt.DamageType == DamageType.Magic ? ColorMagicDamage : ColorPhysicalDamage, text);
+
+                            if (ImGui.IsItemHovered()) {
+                                ImGui.BeginTooltip();
+                                ImGui.TextUnformatted($"{dt.DamageType} Damage");
+                                if (dt.Crit)
+                                    ImGui.TextUnformatted("Critical Hit");
+                                if (dt.DirectHit)
+                                    ImGui.TextUnformatted("Direct Hit (+25%)");
+                                if (dt.Parried)
+                                    ImGui.TextUnformatted("Parried (-20%)");
+                                if (dt.Blocked)
+                                    ImGui.TextUnformatted("Blocked (-15%)");
+                                ImGui.EndTooltip();
+                            }
+
+                            ImGui.TableNextColumn(); // Ability
+                            if (dt.DisplayType != ActionEffectDisplayType.HideActionName) {
+                                if (GetIconImage(dt.Icon) is { } img)
+                                    InlineIcon(img);
+
+                                ImGui.AlignTextToFramePadding();
+                                ImGuiHelper.TextColored(ColorAction, $"{dt.Action}");
+                            }
+
+                            ImGui.TableNextColumn(); // Source
+                            ImGui.AlignTextToFramePadding();
+                            ImGui.TextUnformatted(dt.Source ?? "");
+
+                            DrawHpColumn(dt);
+
+                            DrawStatusEffectsColumn(dt);
+                            break;
+                        }
+                        case CombatEvent.Healed h: {
+                            if (!plugin.Configuration.EventFilter.HasFlag(EventFilter.Healing))
+                                continue;
+                            ImGui.TableNextRow();
+
+                            DrawTimeColumn(h, death.TimeOfDeath);
+
+                            ImGui.TableNextColumn(); // Amount
+                            ImGui.AlignTextToFramePadding();
+                            ImGuiHelper.TextColored(ColorHealingText, $"+{h.Amount:N0}");
+
+                            ImGui.TableNextColumn(); // Ability
+                            if (GetIconImage(h.Icon) is { } img)
+                                InlineIcon(img);
+
+                            ImGui.AlignTextToFramePadding();
+                            ImGuiHelper.TextColored(ColorAction, h.Action);
+
+                            ImGui.TableNextColumn(); // Source
+                            ImGui.AlignTextToFramePadding();
+                            ImGui.TextUnformatted(h.Source ?? "");
+
+                            DrawHpColumn(h);
+
+                            DrawStatusEffectsColumn(h);
+                            break;
+                        }
+                        case CombatEvent.StatusEffect s: {
+                            switch (s.Category) {
+                                case StatusCategory.Beneficial when !plugin.Configuration.EventFilter.HasFlag(EventFilter.Buffs):
+                                case StatusCategory.Detrimental when !plugin.Configuration.EventFilter.HasFlag(EventFilter.Debuffs):
+                                    continue;
+                            }
+
+                            ImGui.TableNextRow();
+
+                            DrawTimeColumn(s, death.TimeOfDeath);
+
+                            ImGui.TableNextColumn(); // Amount
+                            ImGui.AlignTextToFramePadding();
+                            ImGui.TextUnformatted($"{s.Duration:N0}s");
+
+                            ImGui.TableNextColumn(); // Ability
+                            if (GetIconImage(s.Icon) is { } img)
+                                InlineIcon(img);
+
+                            ImGui.AlignTextToFramePadding();
+                            ImGui.TextUnformatted(s.Status ?? "");
+                            if (ImGui.IsItemHovered()) {
+                                ImGui.BeginTooltip();
+                                ImGui.TextUnformatted(s.Description);
+                                ImGui.EndTooltip();
+                            }
+
+                            ImGui.TableNextColumn(); // Source
+                            ImGui.AlignTextToFramePadding();
+                            ImGui.TextUnformatted(s.Source ?? "");
+
+                            DrawHpColumn(s);
+
+                            DrawStatusEffectsColumn(s);
+                            break;
+                        }
+                    }
+
+            ImGui.EndTable();
+        }
+    }
+
+    private void DrawCombatHistogram(Death? death) {
+        var style = ImGui.GetStyle();
+        ImGui.Dummy(ImGui.GetWindowSize() - ImGui.GetCursorPos() - style.FramePadding * 4);
+        var bbMin = ImGui.GetItemRectMin();
+        var frameSize = ImGui.GetItemRectSize();
+        var hovered = ImGui.IsItemHovered();
+
+        RenderFrame(bbMin, bbMin + frameSize, ImGui.GetColorU32(ImGuiCol.FrameBg), true, style.FrameRounding);
+
+        if (death == null || death.Events.Count == 0)
+            return;
+
+        int Next(int i) {
+            for (i += 1; i < death.Events.Count && death.Events[i] is CombatEvent.StatusEffect; i++) {
+            }
+
+            return i;
+        }
+
+        var mousePos = ImGui.GetMousePos();
+        var innerPos = bbMin + style.FramePadding;
+        var innerSize = frameSize - style.FramePadding * 2;
+        var drawList = ImGui.GetWindowDrawList();
+        var n = Next(-1);
+        if ((death.TimeOfDeath - death.Events[n].Snapshot.Time).TotalSeconds > 20)
+            for (; n < death.Events.Count - 1 && (death.TimeOfDeath - death.Events[Next(n)].Snapshot.Time).TotalSeconds > 20; n = Next(n)) {
+            }
+
+        var eCur = death.Events[n];
+        var yScaleMax = (uint)(eCur.Snapshot.MaxHp * 1.3);
+        var tScaleMin = death.TimeOfDeath - TimeSpan.FromSeconds(20);
+        var tScaleMax = death.TimeOfDeath;
+        var invYScale = 1.0f / yScaleMax;
+        var invTScale = 1.0f / (tScaleMax - tScaleMin).TotalSeconds;
+        var pntCur = new Vector2(0, 1.0f - Math.Clamp(eCur.Snapshot.CurrentHp * invYScale, 0, 1));
+        var minWidth = 5 / innerSize.X;
+        var lastBarPos = float.MaxValue;
+
+        ImGui.PushClipRect(bbMin, bbMin + frameSize, true);
+        for (; n < death.Events.Count; n = Next(n)) {
+            CombatEvent? eNext;
+            Vector2 pntNext;
+            if (n < death.Events.Count - 1) {
+                eNext = death.Events[Math.Min(Next(n), death.Events.Count - 1)];
+                pntNext = new Vector2((float)((eNext.Snapshot.Time - tScaleMin).TotalSeconds * invTScale),
+                    1.0f - Math.Clamp(eNext.Snapshot.CurrentHp * invYScale, 0, 1));
+                if (pntNext.X - pntCur.X < minWidth)
+                    pntNext.X = pntCur.X + minWidth;
+            } else {
+                eNext = null;
+                pntNext = new Vector2(1, 1);
+            }
+
+            var change = 0L;
+            var text = "";
+            var numCol = 0xFFu;
+
+            switch (eCur) {
+                case CombatEvent.Healed h:
+                    change = h.Amount;
+                    pntCur.Y -= change * invYScale;
+                    text = h.Action;
+                    numCol = ColorHealingText;
+                    break;
+                case CombatEvent.HoT hot:
+                    change = hot.Amount;
+                    pntCur.Y -= change * invYScale;
+                    text = "HoT";
+                    numCol = ColorHealingText;
+                    break;
+                case CombatEvent.DamageTaken dt:
+                    change = -dt.Amount;
+                    text = dt.Action;
+                    numCol = dt.DamageType == DamageType.Magic ? ColorMagicDamage : ColorPhysicalDamage;
+                    break;
+                case CombatEvent.DoT dot:
+                    change = -dot.Amount;
+                    text = "DoT";
+                    numCol = ColorDamage;
+                    break;
+            }
+
+            var changeScaled = (float)change / yScaleMax;
+
+            var pos1 = innerPos + innerSize * pntCur;
+            var pos2 = innerPos + innerSize * pntNext with { Y = 1 };
+            if (hovered && mousePos.X >= pos1.X && mousePos.X <= pos2.X) {
+                ImGui.BeginTooltip();
+                switch (eCur) {
+                    case CombatEvent.Healed h: {
+                        ImGui.AlignTextToFramePadding();
+                        ImGui.TextUnformatted("Healed for");
+                        ImGui.SameLine(0, 4);
+                        ImGuiHelper.TextColored(numCol, $"{h.Amount:N0}");
+                        ImGui.SameLine(0, 4);
+                        ImGui.TextUnformatted("from");
+                        ImGui.SameLine(0, 6);
+                        if (GetIconImage(h.Icon) is { } img) {
+                            InlineIcon(img);
+                        }
+
+                        ImGuiHelper.TextColored(ColorAction, $"{h.Action}");
+                        ImGui.SameLine(0, 4);
+                        ImGui.TextUnformatted($"by {h.Source ?? ""}.");
+                        break;
+                    }
+                    case CombatEvent.DamageTaken dt: {
+                        ImGui.AlignTextToFramePadding();
+                        ImGui.TextUnformatted("Took");
+                        ImGui.SameLine(0, 4);
+                        ImGuiHelper.TextColored(numCol, $"{dt.Amount:N0}");
+                        ImGui.SameLine(0, 4);
+                        ImGui.TextUnformatted("from");
+                        ImGui.SameLine(0, 6);
+                        if (GetIconImage(dt.Icon) is { } img) {
+                            InlineIcon(img);
+                        }
+
+                        ImGuiHelper.TextColored(ColorAction, $"{dt.Action}");
+                        ImGui.SameLine(0, 4);
+                        ImGui.TextUnformatted($"by {dt.Source ?? ""}.");
+
+                        break;
+                    }
+                    case CombatEvent.DoT dt:
+                        ImGui.TextUnformatted("Took");
+                        ImGui.SameLine(0, 4);
+                        ImGuiHelper.TextColored(numCol, $"{dt.Amount:N0}");
+                        ImGui.SameLine(0, 4);
+                        ImGui.TextUnformatted("from damage over time effect.");
+                        break;
+                    case CombatEvent.HoT hot:
+                        ImGui.TextUnformatted("Recovered");
+                        ImGui.SameLine(0, 4);
+                        ImGuiHelper.TextColored(numCol, $"{hot.Amount:N0}");
+                        ImGui.SameLine(0, 4);
+                        ImGui.TextUnformatted("HP from healing over time effect.");
+                        break;
+                }
+
+                ImGui.TextUnformatted(
+                    $"HP: {eCur.Snapshot.CurrentHp:N0} ({(float)eCur.Snapshot.CurrentHp / eCur.Snapshot.MaxHp:P1}) → {eCur.Snapshot.CurrentHp + change:N0} ({(float)(eCur.Snapshot.CurrentHp + change) / eCur.Snapshot.MaxHp:P1})");
+
+                if (eCur.Snapshot.StatusEffects is { Count: > 0 } statusEffects && Service.DataManager.GetExcelSheet<Status>() is { } statusSheet) {
+                    ImGui.TextUnformatted("Status Effects");
+                    var printSeparator = false;
+                    foreach (var category in statusEffects.Select(s => statusSheet.GetRow(s)).OfType<Status>().Reverse().GroupBy(s => s.Category)
+                                 .OrderByDescending(s => s.Key)) {
+                        if (category.Key == 0)
+                            continue;
+                        if (printSeparator) {
+                            ImGuiHelper.TextColored(ColorGrey, "|");
+                            ImGui.SameLine(0, 4);
+                        } else
+                            printSeparator = true;
+
+                        foreach (var s in category) {
+                            if (GetIconImage(s.Icon) is { } img) {
+                                InlineIcon(img, 2);
+                            }
+                        }
+                    }
+                }
+
+                ImGui.EndTooltip();
+            }
+
+            drawList.AddRectFilled(pos1, pos2, ColorHp);
+            if (change > 0) {
+                drawList.AddRectFilled(pos1, innerPos + innerSize * pntNext with { Y = pntCur.Y + changeScaled }, ColorOverlayHealed);
+            } else if (change < 0) {
+                drawList.AddRectFilled(pos1, innerPos + innerSize * pntNext with { Y = pntCur.Y - changeScaled }, ColorOverlayDamageTaken);
+            }
+
+            drawList.AddLine(pos1, new Vector2(pos1.X, pos2.Y), 0xA0000000, 1f);
+            drawList.AddLine(pos1, new Vector2(pos2.X, pos1.Y), 0xA0000000, 1f);
+            if (lastBarPos < pos1.Y)
+                drawList.AddLine(pos1 with { Y = lastBarPos }, pos1, 0xA0000000, 1f);
+            lastBarPos = pos1.Y;
+
+            if (pos2.X - pos1.X > 50) {
+                var textSize = ImGui.CalcTextSize(text, 0, pos2.X - pos1.X);
+                if (innerPos.Y + innerSize.Y - pos1.Y - innerSize.Y * Math.Abs(changeScaled) < textSize.Y) {
+                    drawList.AddTextOutlined(pos1 + new Vector2(pos2.X - pos1.X - textSize.X, -textSize.Y * 2 - 10) * 0.5f, 0xFFFFFFFF, 0xFF000000, text,
+                        textSize.X);
+                } else {
+                    drawList.AddTextOutlined(pos1 + (pos2 - pos1 - textSize + innerSize * new Vector2(0, Math.Abs(changeScaled))) * 0.5f, 0xFFFFFFFF,
+                        0xFF000000, text, textSize.X);
+                }
+
+                var changeText = $"{(change > 0 ? "+" : "")}{change:N0}";
+                textSize = ImGui.CalcTextSize(changeText);
+                drawList.AddTextOutlined(pos1 + (new Vector2(pos2.X - pos1.X, innerSize.Y * Math.Abs(changeScaled)) - textSize) * 0.5f, numCol, 0xFF000000,
+                    changeText);
+            }
+
+            if (eNext != null)
+                eCur = eNext;
+            pntCur = pntNext;
+        }
+
+        var maxHpLine = new Vector2(0, innerSize.Y * (1 - eCur.Snapshot.MaxHp * invYScale));
+        drawList.AddLine(innerPos + maxHpLine, innerPos + innerSize with { Y = maxHpLine.Y }, ColorGrey);
+        var maxHpText = eCur.Snapshot.MaxHp.ToString("N0");
+        drawList.AddText(innerPos + maxHpLine - ImGui.CalcTextSize(maxHpText) with { X = 0 }, ColorGrey, maxHpText);
+
+        var maxLabels = (int)(innerSize.X * 0.01);
+        while (Math.DivRem(20, maxLabels, out var rem) == 0 || rem != 0) {
+            maxLabels--;
+        }
+
+        if (maxLabels > 0) {
+            var labelPos = (innerSize.X - 1) / maxLabels;
+            for (var i = 0; i <= maxLabels; i++) {
+                var pos = labelPos * i;
+                drawList.AddLine(innerPos + new Vector2(pos, innerSize.Y - 10), innerPos + innerSize with { X = pos }, ColorDarkGrey, 2);
+                var text = $"-{20 - 20 / maxLabels * i}";
+                var textSize = ImGui.CalcTextSize(text);
+                if (i == maxLabels) {
+                    pos -= textSize.X + 2;
+                } else if (i > 0) {
+                    pos -= textSize.X * 0.5f;
+                } else {
+                    pos += 2;
+                }
+
+                drawList.AddText(innerPos + new Vector2(pos, innerSize.Y - textSize.Y - 10), ColorDarkGrey, text);
+            }
+        }
+
+        ImGui.PopClipRect();
+    }
+
+    private static void RenderFrame(Vector2 pMin, Vector2 pMax, uint fillCol, bool border, float rounding) {
+        var drawList = ImGui.GetWindowDrawList();
+        var style = ImGui.GetStyle();
+        drawList.AddRectFilled(pMin, pMax, fillCol, rounding);
+        float borderSize = style.FrameBorderSize;
+        if (border && borderSize > 0.0f) {
+            drawList.AddRect(pMin + new Vector2(1, 1), pMax + new Vector2(1, 1), ImGui.GetColorU32(ImGuiCol.BorderShadow), rounding, 0, borderSize);
+            drawList.AddRect(pMin, pMax, ImGui.GetColorU32(ImGuiCol.Border), rounding, 0, borderSize);
+        }
+    }
+
+    private static void InlineIcon(TextureWrap img, float paddingTop = 4, float paddingRight = 4) {
+        var imgPos = ImGui.GetCursorScreenPos() + new Vector2(0, paddingTop);
+        // ReSharper disable once PossibleLossOfFraction
+        var imgSize = ImGuiHelpers.ScaledVector2(16 * img.Width / img.Height, 16);
+        ImGui.Dummy(imgSize);
+        ImGui.GetWindowDrawList().AddImage(img.ImGuiHandle, imgPos, imgPos + imgSize);
+        ImGui.SameLine(0, paddingRight);
+    }
+
+    private void DrawStatusEffectsColumn(CombatEvent e) {
+        if (e.Snapshot.StatusEffects is { } statusEffects && Service.DataManager.GetExcelSheet<Status>() is { } sheet) {
+            ImGui.TableNextColumn();
+            var printSeparator = false;
+            foreach (var group in statusEffects.Select(s => sheet.GetRow(s)).OfType<Status>().Reverse().GroupBy(s => s.Category)
+                         .OrderByDescending(s => s.Key)) {
+                if (group.Key == 0)
+                    continue;
+                if (printSeparator) {
+                    ImGui.AlignTextToFramePadding();
+                    ImGuiHelper.TextColored(ColorGrey, "|");
+                    ImGui.SameLine(0, 4);
+                } else
+                    printSeparator = true;
+
+                foreach (var s in group) {
+                    if (s.IsFcBuff)
+                        continue;
+                    if (GetIconImage(s.Icon) is { } img) {
+                        InlineIcon(img);
+                        if (ImGui.IsItemHovered()) {
+                            ImGui.BeginTooltip();
+                            ImGui.TextUnformatted(s.Name.RawString.Demangle());
+                            ImGui.TextUnformatted(s.Description.DisplayedText().Demangle());
+                            ImGui.EndTooltip();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void DrawHpColumn(CombatEvent e, uint hot = 0) {
+        ImGui.TableNextColumn();
+        ImGui.PushStyleColor(ImGuiCol.PlotHistogram, ColorHp);
+        var hpFract = (float)e.Snapshot.CurrentHp / e.Snapshot.MaxHp;
+        var change = hot > 0 ? (float)hot / e.Snapshot.MaxHp : 0;
+        var overkill = 0;
+
+        switch (e) {
+            case CombatEvent.Healed h:
+                change = (float)h.Amount / e.Snapshot.MaxHp;
+                break;
+            case CombatEvent.DamageTaken dt:
+                overkill = (int)(dt.Amount - e.Snapshot.CurrentHp);
+                change = -((float)dt.Amount / e.Snapshot.MaxHp);
+                break;
+            case CombatEvent.DoT dot:
+                overkill = (int)(dot.Amount - e.Snapshot.CurrentHp);
+                change = -((float)dot.Amount / e.Snapshot.MaxHp);
+                break;
+        }
+
+        if (change > 0)
+            hpFract += change;
+
+        var text = $"{e.Snapshot.CurrentHp:N0}";
+        ImGui.ProgressBar(hpFract, new Vector2(-1, 0), text);
+        ImGui.PopStyleColor();
+
+        var bbMin = ImGui.GetItemRectMin();
+        var bbMax = ImGui.GetItemRectMax();
+
+        var style = ImGui.GetStyle();
+        var drawList = ImGui.GetWindowDrawList();
+        if (change is > 0 or < 0) {
+            drawList.PushClipRect(bbMin + new Vector2((bbMax.X - bbMin.X) * (hpFract - Math.Abs(change)), 0),
+                bbMin + bbMax with { X = (float)Math.Round((bbMax.X - bbMin.X) * hpFract) }, true);
+            drawList.AddRectFilled(bbMin, bbMax, change > 0 ? ColorOverlayHealed : ColorOverlayDamageTaken, style.FrameRounding);
+            drawList.PopClipRect();
+        }
+
+        if (e.Snapshot.BarrierPercent > 0) {
+            var barrierFract = e.Snapshot.BarrierPercent / 100f;
+            drawList.PushClipRect(bbMin + new Vector2(0, (bbMax.Y - bbMin.Y) * 0.8f), bbMin + bbMax with { X = (bbMax.X - bbMin.X) * barrierFract }, true);
+            drawList.AddRectFilled(bbMin, bbMax, ColorBarrier, style.FrameRounding);
+            drawList.PopClipRect();
+        }
+
+        var textSiye = ImGui.CalcTextSize(text);
+        drawList.AddText(new Vector2(
+            Math.Clamp(bbMin.X + (bbMax.X - bbMin.X) * hpFract + style.ItemSpacing.X, bbMin.X, bbMax.X - textSiye.X - style.ItemInnerSpacing.X),
+            bbMin.Y + (bbMax.Y - bbMin.Y - textSiye.Y) * 0.5f), 0xFFFFFFFF, text);
+
+        if (overkill > 0 && ImGui.IsItemHovered()) {
+            ImGui.BeginTooltip();
+            ImGui.TextUnformatted($"Overkill by {overkill:N0}");
+            ImGui.EndTooltip();
+        }
+    }
+
+    private void DrawTimeColumn(CombatEvent e, DateTime deathTime) {
+        ImGui.TableNextColumn();
+        ImGui.AlignTextToFramePadding();
+        ImGuiHelper.TextColored(ColorGrey, $"{(e.Snapshot.Time - deathTime).TotalSeconds:N1}s");
+    }
+
+    private TextureWrap? GetIconImage(ushort? icon) {
+        if (icon is { } u) {
+            if (textures.TryGetValue(u, out var tex))
+                return tex;
+            if (Service.DataManager.GetImGuiTextureIcon(u) is { } t)
+                return textures[u] = t;
+        }
+
+        return null;
+    }
+}

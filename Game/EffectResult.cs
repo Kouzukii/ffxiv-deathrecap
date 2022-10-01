@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace DeathRecap.Messages;
+namespace DeathRecap.Game;
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct AddStatusEffect {

@@ -4,7 +4,7 @@ using Dalamud.Game.Text;
 using Dalamud.Interface;
 using ImGuiNET;
 
-namespace DeathRecap;
+namespace DeathRecap.UI;
 
 public class ConfigWindow {
     private readonly DeathRecapPlugin plugin;

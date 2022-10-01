@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace DeathRecap;
+namespace DeathRecap.Events;
 
 public record Death {
     public uint PlayerId { get; internal init; }
