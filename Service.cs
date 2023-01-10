@@ -8,9 +8,9 @@ using Dalamud.Game.Gui;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 
-#pragma warning disable 8618
 namespace DeathRecap;
 
+#pragma warning disable 8618
 // ReSharper disable UnusedAutoPropertyAccessor.Local
 internal class Service {
     [PluginService]
