@@ -557,7 +557,7 @@ public class DeathRecapWindow {
                 if (eCur.Snapshot.StatusEffects is { Count: > 0 } statusEffects && Service.DataManager.GetExcelSheet<Status>() is { } statusSheet) {
                     ImGui.TextUnformatted("Status Effects");
                     var printSeparator = false;
-                    foreach (var category in statusEffects.Select(s => statusSheet.GetRow(s)).OfType<Status>().Reverse().GroupBy(s => s.Category)
+                    foreach (var category in statusEffects.Select(s => statusSheet.GetRow(s)).OfType<Status>().Reverse().GroupBy(s => s.StatusCategory)
                                  .OrderByDescending(s => s.Key)) {
                         if (category.Key == 0)
                             continue;
@@ -668,7 +668,7 @@ public class DeathRecapWindow {
         if (e.Snapshot.StatusEffects is { } statusEffects && Service.DataManager.GetExcelSheet<Status>() is { } sheet) {
             ImGui.TableNextColumn();
             var printSeparator = false;
-            foreach (var group in statusEffects.Select(s => sheet.GetRow(s)).OfType<Status>().Reverse().GroupBy(s => s.Category)
+            foreach (var group in statusEffects.Select(s => sheet.GetRow(s)).OfType<Status>().Reverse().GroupBy(s => s.StatusCategory)
                          .OrderByDescending(s => s.Key)) {
                 if (group.Key == 0)
                     continue;

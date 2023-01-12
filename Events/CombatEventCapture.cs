@@ -267,7 +267,7 @@ public class CombatEventCapture : IDisposable {
                         Icon = status?.Icon,
                         Status = status?.Name.RawString.Demangle(),
                         Description = status?.Description.DisplayedText().Demangle(),
-                        Category = (StatusCategory)(status?.Category ?? 0),
+                        Category = (StatusCategory)(status?.StatusCategory ?? 0),
                         Source = source,
                         Duration = effect.Duration
                     });
