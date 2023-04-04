@@ -32,6 +32,7 @@ public class NotificationHandler : Window{
 
         Flags |= ImGuiWindowFlags.NoResize;
         Flags |= ImGuiWindowFlags.NoCollapse;
+        Flags |= ImGuiWindowFlags.NoFocusOnAppearing;
 
         chatLinkPayload = Service.PluginInterface.AddChatLinkHandler(0, OnChatLinkClick);
     }
