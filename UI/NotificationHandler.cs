@@ -5,6 +5,7 @@ using System.Text;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
+using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
 using DeathRecap.Events;
 using ImGuiNET;
@@ -15,7 +16,8 @@ public class NotificationHandler : Window{
     private readonly DalamudLinkPayload chatLinkPayload;
     private readonly DeathRecapPlugin plugin;
     private Death? popupDeath;
-
+    private bool windowWasMoved;
+    
     public NotificationHandler(DeathRecapPlugin plugin) : base("###deathRecapPopup") {
         this.plugin = plugin;
 
@@ -24,16 +26,13 @@ public class NotificationHandler : Window{
 
         SizeConstraints = new WindowSizeConstraints
         {
-            MinimumSize = new Vector2(200, 60),
-            MaximumSize = new Vector2(200, 60)
+            MinimumSize = new Vector2(200, 80),
+            MaximumSize = new Vector2(200, 80)
         };
 
-        Flags |= ImGuiWindowFlags.NoDecoration;
         Flags |= ImGuiWindowFlags.NoResize;
         Flags |= ImGuiWindowFlags.NoCollapse;
 
-        RespectCloseHotkey = false;
-        
         chatLinkPayload = Service.PluginInterface.AddChatLinkHandler(0, OnChatLinkClick);
     }
 
@@ -48,7 +47,15 @@ public class NotificationHandler : Window{
                 }
     }
 
-    public override void Draw() {
+    public override void Draw()
+    {
+        var viewport = ImGui.GetMainViewport();
+        var initialPos = new Vector2(viewport.WorkPos.X + viewport.WorkSize.X / 2 - 100 * ImGuiHelpers.GlobalScale,
+            viewport.WorkPos.Y + viewport.WorkSize.Y / 2 - 40 * ImGuiHelpers.GlobalScale);
+        windowWasMoved = ImGui.GetWindowPos() != initialPos;
+
+        WindowName = windowWasMoved ? "###deathRecapPopup" : "(Drag me somewhere)###deathRecapPopup";
+        
         var elapsed = (DateTime.Now - popupDeath?.TimeOfDeath)?.TotalSeconds;
         if (!plugin.Window.IsOpen && elapsed < 30) {
             var label = $"Show Death Recap ({30 - elapsed:N0}s)";
