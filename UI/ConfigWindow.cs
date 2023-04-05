@@ -19,8 +19,7 @@ public class ConfigWindow : Window {
             MaximumSize = new Vector2(580, 320)
         };
         
-        Flags |= ImGuiWindowFlags.NoCollapse;
-        Flags |= ImGuiWindowFlags.NoResize;
+        Flags |= ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize;
     }
 
     public override void Draw() {
