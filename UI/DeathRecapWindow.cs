@@ -172,8 +172,7 @@ public class DeathRecapWindow : Window {
         }
     }
 
-    public override void OnClose()
-    {
+    public override void OnClose() {
         if (plugin.Configuration.ShowTip && !hasShownTip) {
             Service.ChatGui.Print("[DeathRecap] Tip: You can reopen this window using /dr or /deathrecap");
             hasShownTip = true;
