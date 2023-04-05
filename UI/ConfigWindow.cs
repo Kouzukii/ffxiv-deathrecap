@@ -14,8 +14,7 @@ public class ConfigWindow : Window {
     public ConfigWindow(DeathRecapPlugin plugin) : base("Death Recap Config") {
         this.plugin = plugin;
 
-        SizeConstraints = new WindowSizeConstraints
-        {
+        SizeConstraints = new WindowSizeConstraints {
             MinimumSize = new Vector2(580, 320),
             MaximumSize = new Vector2(580, 320)
         };
