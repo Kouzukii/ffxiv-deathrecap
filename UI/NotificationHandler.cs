@@ -21,11 +21,14 @@ public class NotificationHandler : Window{
     public NotificationHandler(DeathRecapPlugin plugin) : base("###deathRecapPopup") {
         this.plugin = plugin;
 
+        var viewportPosition = ImGui.GetMainViewport().WorkPos;
+        var viewportSize = ImGui.GetMainViewport().WorkSize;
+        var windowSize = ImGuiHelpers.ScaledVector2(200, 80);
+        
         PositionCondition = ImGuiCond.FirstUseEver;
-        Position = new Vector2(200, 80);
+        Position = viewportPosition + viewportSize / 2.0f - windowSize / 2.0f;
 
-        SizeConstraints = new WindowSizeConstraints
-        {
+        SizeConstraints = new WindowSizeConstraints {
             MinimumSize = new Vector2(200, 80),
             MaximumSize = new Vector2(200, 80)
         };
