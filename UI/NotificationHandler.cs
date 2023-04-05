@@ -39,7 +39,7 @@ public class NotificationHandler : Window{
     }
 
     private void OnChatLinkClick(uint cmdId, SeString msg) {
-        plugin.Window.IsOpen = !plugin.Window.IsOpen;
+        plugin.Window.IsOpen = true;
         if (msg.Payloads.ElementAtOrDefault(2) is TextPayload p)
             foreach (var deaths in plugin.DeathsPerPlayer.Values)
                 if (deaths.FirstOrDefault()?.PlayerName == p.Text) {
