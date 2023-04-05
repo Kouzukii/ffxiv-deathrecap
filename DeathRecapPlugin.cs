@@ -60,7 +60,6 @@ public class DeathRecapPlugin : IDalamudPlugin {
         }
 #endif
     }
-    private void UiBuilderOnOpenConfigUi() => ConfigWindow.IsOpen = !ConfigWindow.IsOpen;
 
     private void FrameworkOnUpdate(Framework framework) {
 #if !DEBUG
