@@ -30,9 +30,7 @@ public class NotificationHandler : Window{
             MaximumSize = new Vector2(200, 80)
         };
 
-        Flags |= ImGuiWindowFlags.NoResize;
-        Flags |= ImGuiWindowFlags.NoCollapse;
-        Flags |= ImGuiWindowFlags.NoFocusOnAppearing;
+        Flags |= ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoFocusOnAppearing;
 
         chatLinkPayload = Service.PluginInterface.AddChatLinkHandler(0, OnChatLinkClick);
     }
