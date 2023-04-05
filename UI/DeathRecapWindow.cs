@@ -60,7 +60,7 @@ public class DeathRecapWindow : Window {
             ImGui.SameLine(0, 15);
             if (plugin.Configuration.ShowCombatHistogram)
                 ImGui.BeginDisabled();
-            if(ImGuiComponents.IconButton("FilterButton", FontAwesomeIcon.Filter))
+            if (ImGuiComponents.IconButton("FilterButton", FontAwesomeIcon.Filter))
                 ImGui.OpenPopup("death_recap_filter");
             if (ImGui.IsItemHovered()) {
                 ImGui.SetTooltip("Filter events");
