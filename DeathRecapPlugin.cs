@@ -71,7 +71,6 @@ public class DeathRecapPlugin : IDalamudPlugin {
 #endif
     }
 
-    private void UiBuilderOnDraw() => WindowSystem.Draw();
 
     public void Dispose() {
         CombatEventCapture.Dispose();
