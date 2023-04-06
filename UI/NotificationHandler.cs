@@ -6,25 +6,40 @@ using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface;
+using Dalamud.Interface.Windowing;
 using DeathRecap.Events;
 using ImGuiNET;
 
 namespace DeathRecap.UI;
 
-public class NotificationHandler {
+public class NotificationHandler : Window{
     private readonly DalamudLinkPayload chatLinkPayload;
     private readonly DeathRecapPlugin plugin;
     private Death? popupDeath;
     private bool windowWasMoved;
-
-    public NotificationHandler(DeathRecapPlugin plugin) {
+    
+    public NotificationHandler(DeathRecapPlugin plugin) : base("###deathRecapPopup") {
         this.plugin = plugin;
+
+        var viewportPosition = ImGui.GetMainViewport().WorkPos;
+        var viewportSize = ImGui.GetMainViewport().WorkSize;
+        var windowSize = ImGuiHelpers.ScaledVector2(200, 80);
+        
+        PositionCondition = ImGuiCond.FirstUseEver;
+        Position = viewportPosition + viewportSize / 2.0f - windowSize / 2.0f;
+
+        SizeConstraints = new WindowSizeConstraints {
+            MinimumSize = new Vector2(200, 80),
+            MaximumSize = new Vector2(200, 80)
+        };
+
+        Flags |= ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoFocusOnAppearing;
 
         chatLinkPayload = Service.PluginInterface.AddChatLinkHandler(0, OnChatLinkClick);
     }
 
     private void OnChatLinkClick(uint cmdId, SeString msg) {
-        plugin.Window.ShowDeathRecap = true;
+        plugin.Window.IsOpen = true;
         if (msg.Payloads.ElementAtOrDefault(2) is TextPayload p)
             foreach (var deaths in plugin.DeathsPerPlayer.Values)
                 if (deaths.FirstOrDefault()?.PlayerName == p.Text) {
@@ -34,31 +49,33 @@ public class NotificationHandler {
                 }
     }
 
-    public void Draw() {
+    public override void Draw()
+    {
+        var viewport = ImGui.GetMainViewport();
+        var initialPos = new Vector2(viewport.WorkPos.X + viewport.WorkSize.X / 2 - 100 * ImGuiHelpers.GlobalScale,
+            viewport.WorkPos.Y + viewport.WorkSize.Y / 2 - 40 * ImGuiHelpers.GlobalScale);
+        windowWasMoved = ImGui.GetWindowPos() != initialPos;
+
+        WindowName = windowWasMoved ? "###deathRecapPopup" : "(Drag me somewhere)###deathRecapPopup";
+        
         var elapsed = (DateTime.Now - popupDeath?.TimeOfDeath)?.TotalSeconds;
-        if (!plugin.Window.ShowDeathRecap && elapsed < 30) {
-            var viewport = ImGui.GetMainViewport();
-            var initialPos = new Vector2(viewport.WorkPos.X + viewport.WorkSize.X / 2 - 100 * ImGuiHelpers.GlobalScale,
-                viewport.WorkPos.Y + viewport.WorkSize.Y / 2 - 40 * ImGuiHelpers.GlobalScale);
-            ImGui.SetNextWindowPos(initialPos, ImGuiCond.FirstUseEver);
-            ImGui.SetNextWindowSize(ImGuiHelpers.ScaledVector2(200, 80));
-            if (ImGui.Begin(windowWasMoved ? "###deathRecapPopup" : "(Drag me somewhere)###deathRecapPopup",
-                    ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse)) {
-                windowWasMoved = ImGui.GetWindowPos() != initialPos;
-                var label = $"Show Death Recap ({30 - elapsed:N0}s)";
-                if (popupDeath?.PlayerName is { } playerName)
-                    label = AppendCenteredPlayerName(label, playerName);
+        if (!plugin.Window.IsOpen && elapsed < 30) {
+            var label = $"Show Death Recap ({30 - elapsed:N0}s)";
+            if (popupDeath?.PlayerName is { } playerName)
+                label = AppendCenteredPlayerName(label, playerName);
 
-                if (ImGui.Button(label, new Vector2(-1, -1))) {
-                    plugin.Window.ShowDeathRecap = true;
-                    if (popupDeath?.PlayerId is { } id)
-                        plugin.Window.SelectedPlayer = id;
+            if (ImGui.Button(label, new Vector2(-1, -1))) {
+                plugin.Window.IsOpen = true;
+                if (popupDeath?.PlayerId is { } id)
+                    plugin.Window.SelectedPlayer = id;
 
-                    popupDeath = null;
-                }
-
-                ImGui.End();
+                popupDeath = null;
+                IsOpen = false;
             }
+        }
+        else
+        {
+            IsOpen = false;
         }
     }
 
@@ -93,6 +110,7 @@ public class NotificationHandler {
         switch (displayType) {
             case NotificationStyle.Popup:
                 popupDeath = death;
+                IsOpen = true;
                 break;
             case NotificationStyle.Chat:
                 var chatMsg = HasAuthor(plugin.Configuration.ChatType)
@@ -104,7 +122,7 @@ public class NotificationHandler {
                 Service.ChatGui.PrintChat(new XivChatEntry { Message = chatMsg, Type = plugin.Configuration.ChatType, Name = death.PlayerName });
                 break;
             case NotificationStyle.OpenDeathRecap:
-                plugin.Window.ShowDeathRecap = true;
+                plugin.Window.IsOpen = true;
                 plugin.Window.SelectedPlayer = death.PlayerId;
                 plugin.Window.SelectedDeath = 0;
                 break;

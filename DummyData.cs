@@ -1449,7 +1449,7 @@ internal static class DummyData {
             });
 
         plugin.NotificationHandler.DisplayDeath(plugin.DeathsPerPlayer[0][0]);
-        plugin.Window.ShowDeathRecap = true;
+        plugin.Window.IsOpen = true;
     }
 }
 #endif

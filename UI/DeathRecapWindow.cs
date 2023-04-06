@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Dalamud.Interface;
+using Dalamud.Interface.Components;
+using Dalamud.Interface.Windowing;
 using Dalamud.Logging;
 using DeathRecap.Events;
 using DeathRecap.Game;
@@ -13,7 +15,7 @@ using Newtonsoft.Json;
 
 namespace DeathRecap.UI;
 
-public class DeathRecapWindow {
+public class DeathRecapWindow : Window {
     private const uint ColorOverlayHealed = 0x50FFFFFFu;
     private const uint ColorOverlayDamageTaken = 0x50000000u;
     private const uint ColorBarrier = 0xFF33FFFF;
@@ -32,171 +34,148 @@ public class DeathRecapWindow {
 
     private bool hasShownTip;
 
-    public DeathRecapWindow(DeathRecapPlugin plugin) {
+    public DeathRecapWindow(DeathRecapPlugin plugin) : base("Death Recap") {
         this.plugin = plugin;
-    }
 
-    public bool ShowDeathRecap { get; internal set; }
+        SizeCondition = ImGuiCond.FirstUseEver;
+        Size = new Vector2(800, 350);
+    }
 
     public uint SelectedPlayer { get; internal set; }
 
     public int SelectedDeath { get; internal set; }
 
-    public void Draw() {
+    public override void Draw() {
         try {
-            if (!ShowDeathRecap)
-                return;
-            var bShowDeathRecap = ShowDeathRecap;
-            ImGui.SetNextWindowSize(ImGuiHelpers.ScaledVector2(800, 350), ImGuiCond.FirstUseEver);
-            if (ImGui.Begin("Death Recap", ref bShowDeathRecap)) {
-                if (!plugin.DeathsPerPlayer.TryGetValue(SelectedPlayer, out var deaths))
-                    deaths = new List<Death>();
+            if (!plugin.DeathsPerPlayer.TryGetValue(SelectedPlayer, out var deaths))
+                deaths = new List<Death>();
 
-                if (SelectedDeath < 0 || SelectedDeath >= deaths.Count)
-                    SelectedDeath = 0;
+            if (SelectedDeath < 0 || SelectedDeath >= deaths.Count)
+                SelectedDeath = 0;
 
-                var death = deaths.Count > SelectedDeath ? deaths[deaths.Count - 1 - SelectedDeath] : null;
+            var death = deaths.Count > SelectedDeath ? deaths[deaths.Count - 1 - SelectedDeath] : null;
 
-                DrawPlayerSelection(deaths.FirstOrDefault()?.PlayerName);
+            DrawPlayerSelection(deaths.FirstOrDefault()?.PlayerName);
 
-                ImGui.PushFont(UiBuilder.IconFont);
-                ImGui.SameLine(0, 15);
-                if (plugin.Configuration.ShowCombatHistogram)
-                    ImGui.BeginDisabled();
-                if (ImGui.Button(FontAwesomeIcon.Filter.ToIconString()))
-                    ImGui.OpenPopup("death_recap_filter");
-                ImGui.PopFont();
-                if (ImGui.IsItemHovered()) {
-                    ImGui.BeginTooltip();
-                    ImGui.TextUnformatted("Filter events");
-                    ImGui.EndTooltip();
-                }
+            ImGui.SameLine(0, 15);
+            if (plugin.Configuration.ShowCombatHistogram)
+                ImGui.BeginDisabled();
+            if (ImGuiComponents.IconButton("FilterButton", FontAwesomeIcon.Filter))
+                ImGui.OpenPopup("death_recap_filter");
+            if (ImGui.IsItemHovered()) {
+                ImGui.SetTooltip("Filter events");
+            }
 
-                if (plugin.Configuration.ShowCombatHistogram)
-                    ImGui.EndDisabled();
+            if (plugin.Configuration.ShowCombatHistogram)
+                ImGui.EndDisabled();
 
-                if (ImGui.BeginPopup("death_recap_filter")) {
-                    ImGui.TextUnformatted("Row filters");
+            if (ImGui.BeginPopup("death_recap_filter")) {
+                ImGui.TextUnformatted("Row filters");
 
-                    void FlagCheckbox(string label, EventFilter flag) {
-                        var b = plugin.Configuration.EventFilter.HasFlag(flag);
-                        if (!ImGui.Checkbox(label, ref b))
-                            return;
-                        if (b)
-                            plugin.Configuration.EventFilter |= flag;
-                        else
-                            plugin.Configuration.EventFilter &= ~flag;
-                        plugin.Configuration.Save();
-                    }
-
-                    FlagCheckbox("Show damage", EventFilter.Damage);
-                    FlagCheckbox("Show healing", EventFilter.Healing);
-                    FlagCheckbox("Show debuffs", EventFilter.Debuffs);
-                    FlagCheckbox("Show buffs", EventFilter.Buffs);
-                    ImGui.EndPopup();
-                }
-
-                ImGui.PushFont(UiBuilder.IconFont);
-                ImGui.SameLine(0, 15);
-                if (ImGui.Button((plugin.Configuration.ShowCombatHistogram ? FontAwesomeIcon.Table : FontAwesomeIcon.ChartBar).ToIconString())) {
-                    plugin.Configuration.ShowCombatHistogram ^= true;
+                void FlagCheckbox(string label, EventFilter flag) {
+                    var b = plugin.Configuration.EventFilter.HasFlag(flag);
+                    if (!ImGui.Checkbox(label, ref b))
+                        return;
+                    if (b)
+                        plugin.Configuration.EventFilter |= flag;
+                    else
+                        plugin.Configuration.EventFilter &= ~flag;
                     plugin.Configuration.Save();
                 }
 
-                ImGui.PopFont();
-                if (ImGui.IsItemHovered()) {
-                    ImGui.BeginTooltip();
-                    ImGui.TextUnformatted(plugin.Configuration.ShowCombatHistogram ? "Switch to detailed view" : "Switch to histogram (experimental)");
-                    ImGui.EndTooltip();
+                FlagCheckbox("Show damage", EventFilter.Damage);
+                FlagCheckbox("Show healing", EventFilter.Healing);
+                FlagCheckbox("Show debuffs", EventFilter.Debuffs);
+                FlagCheckbox("Show buffs", EventFilter.Buffs);
+                ImGui.EndPopup();
+            }
+
+            ImGui.SameLine(0, 15);
+            if (ImGuiComponents.IconButton("Histogram Button", plugin.Configuration.ShowCombatHistogram ? FontAwesomeIcon.Table : FontAwesomeIcon.ChartBar)) {
+                plugin.Configuration.ShowCombatHistogram ^= true;
+                plugin.Configuration.Save();
+            }
+
+            if (ImGui.IsItemHovered()) {
+                ImGui.SetTooltip(plugin.Configuration.ShowCombatHistogram ? "Switch to detailed view" : "Switch to histogram (experimental)");
+            }
+
+            ImGui.SameLine(0, 15);
+            if (ImGuiComponents.IconButton("Clear All Button", FontAwesomeIcon.Trash))
+                ImGui.OpenPopup("death_recap_clearall");
+
+            if (ImGui.IsItemHovered()) {
+                ImGui.SetTooltip("Clear all events");
+            }
+
+            if (ImGui.BeginPopup("death_recap_clearall")) {
+                ImGui.TextUnformatted("Are you sure?");
+                if (ImGui.Button("Yes")) {
+                    plugin.DeathsPerPlayer.Clear();
+                    ImGui.CloseCurrentPopup();
                 }
 
-                ImGui.PushFont(UiBuilder.IconFont);
-                ImGui.SameLine(0, 15);
-                if (ImGui.Button(FontAwesomeIcon.Trash.ToIconString()))
-                    ImGui.OpenPopup("death_recap_clearall");
-
-                ImGui.PopFont();
-                if (ImGui.IsItemHovered()) {
-                    ImGui.BeginTooltip();
-                    ImGui.TextUnformatted("Clear all events");
-                    ImGui.EndTooltip();
+                ImGui.SameLine();
+                if (ImGui.Button("No")) {
+                    ImGui.CloseCurrentPopup();
                 }
 
-                if (ImGui.BeginPopup("death_recap_clearall")) {
-                    ImGui.TextUnformatted("Are you sure?");
-                    if (ImGui.Button("Yes")) {
-                        plugin.DeathsPerPlayer.Clear();
-                        ImGui.CloseCurrentPopup();
-                    }
-
-                    ImGui.SameLine();
-                    if (ImGui.Button("No")) {
-                        ImGui.CloseCurrentPopup();
-                    }
-
-                    ImGui.EndPopup();
-                }
+                ImGui.EndPopup();
+            }
 
 #if DEBUG
-                ImGui.PushFont(UiBuilder.IconFont);
-                ImGui.SameLine(0, 15);
-                if (ImGui.Button(FontAwesomeIcon.Copy.ToIconString())) {
-                    ImGui.SetClipboardText(JsonConvert.SerializeObject(death));
-                }
+            ImGui.PushFont(UiBuilder.IconFont);
+            ImGui.SameLine(0, 15);
+            if (ImGuiComponents.IconButton("Copy To Clipboard Button", FontAwesomeIcon.Copy)) {
+                ImGui.SetClipboardText(JsonConvert.SerializeObject(death));
+            }
 
-                ImGui.PopFont();
-                if (ImGui.IsItemHovered()) {
-                    ImGui.BeginTooltip();
-                    ImGui.TextUnformatted("Copy combat events as JSON");
-                    ImGui.EndTooltip();
-                }
+            ImGui.PopFont();
+            if (ImGui.IsItemHovered()) {
+                ImGui.SetTooltip("Copy combat events as JSON");
+            }
 #endif
 
-                ImGui.PushFont(UiBuilder.IconFont);
-                var config = FontAwesomeIcon.Cog.ToIconString();
-                ImGui.SameLine(ImGui.GetWindowContentRegionMax().X - ImGui.GetWindowContentRegionMin().X - ImGuiHelpers.GetButtonSize(config).X);
-                if (ImGui.Button(config))
-                    plugin.ConfigWindow.ShowConfig = true;
+            ImGui.PushFont(UiBuilder.IconFont);
+            var config = FontAwesomeIcon.Cog.ToIconString();
+            ImGui.SameLine(ImGui.GetWindowContentRegionMax().X - ImGui.GetWindowContentRegionMin().X - ImGuiHelpers.GetButtonSize(config).X);
+            if (ImGui.Button(config))
+                plugin.ConfigWindow.IsOpen = true;
 
-                ImGui.PopFont();
-                if (ImGui.IsItemHovered()) {
-                    ImGui.BeginTooltip();
-                    ImGui.TextUnformatted("Configuration");
-                    ImGui.EndTooltip();
-                }
-
-                ImGui.Separator();
-
-                ImGui.Columns(2);
-                ImGui.SetColumnWidth(0, 160 * ImGuiHelpers.GlobalScale);
-                ImGui.TextUnformatted("Deaths");
-                ImGui.Spacing();
-                for (var index = deaths.Count - 1; index >= 0; index--) {
-                    ImGui.PushID(index);
-                    if (ImGui.Selectable(deaths[index].Title, index == deaths.Count - 1 - SelectedDeath))
-                        SelectedDeath = deaths.Count - 1 - index;
-                    ImGui.PopID();
-                }
-
-                ImGui.NextColumn();
-
-                if (plugin.Configuration.ShowCombatHistogram)
-                    DrawCombatHistogram(death);
-                else
-                    DrawCombatEventTable(death);
-
-                ImGui.End();
-
-                if (!bShowDeathRecap) {
-                    ShowDeathRecap = false;
-                    if (plugin.Configuration.ShowTip && !hasShownTip) {
-                        Service.ChatGui.Print("[DeathRecap] Tip: You can reopen this window using /dr or /deathrecap");
-                        hasShownTip = true;
-                    }
-                }
+            ImGui.PopFont();
+            if (ImGui.IsItemHovered()) {
+                ImGui.SetTooltip("Configuration");
             }
+
+            ImGui.Separator();
+
+            ImGui.Columns(2);
+            ImGui.SetColumnWidth(0, 160 * ImGuiHelpers.GlobalScale);
+            ImGui.TextUnformatted("Deaths");
+            ImGui.Spacing();
+            for (var index = deaths.Count - 1; index >= 0; index--) {
+                ImGui.PushID(index);
+                if (ImGui.Selectable(deaths[index].Title, index == deaths.Count - 1 - SelectedDeath))
+                    SelectedDeath = deaths.Count - 1 - index;
+                ImGui.PopID();
+            }
+
+            ImGui.NextColumn();
+
+            if (plugin.Configuration.ShowCombatHistogram)
+                DrawCombatHistogram(death);
+            else
+                DrawCombatEventTable(death);
+                
         } catch (Exception e) {
             PluginLog.Error(e, "Failed to draw window");
+        }
+    }
+
+    public override void OnClose() {
+        if (plugin.Configuration.ShowTip && !hasShownTip) {
+            Service.ChatGui.Print("[DeathRecap] Tip: You can reopen this window using /dr or /deathrecap");
+            hasShownTip = true;
         }
     }
 
@@ -749,9 +728,7 @@ public class DeathRecapWindow {
             bbMin.Y + (bbMax.Y - bbMin.Y - textSiye.Y) * 0.5f), 0xFFFFFFFF, text);
 
         if (overkill > 0 && ImGui.IsItemHovered()) {
-            ImGui.BeginTooltip();
-            ImGui.TextUnformatted($"Overkill by {overkill:N0}");
-            ImGui.EndTooltip();
+            ImGui.SetTooltip($"Overkill by {overkill:N0}");
         }
     }
 
