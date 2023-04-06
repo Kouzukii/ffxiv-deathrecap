@@ -14,7 +14,7 @@ public class ConfigWindow : Window {
     public ConfigWindow(DeathRecapPlugin plugin) : base("Death Recap Config", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize) {
         this.plugin = plugin;
 
-        Size = new Vector2(580, 320);
+        Size = new Vector2(580, 340);
     }
 
     public override void Draw() {
@@ -23,80 +23,39 @@ public class ConfigWindow : Window {
         ImGui.TextUnformatted("Capture Settings");
         ImGui.Separator();
         ImGui.Columns(3);
-        {
-            ImGui.PushID(0);
-            var bCapture = conf.CaptureSelf;
-            if (ImGui.Checkbox("Capture Self", ref bCapture)) {
-                conf.CaptureSelf = bCapture;
+        foreach (var (k, v) in conf.EnumCaptureConfigs()) {
+            ImGui.PushID(k);
+            var bCapture = v.Capture;
+            if (ImGui.Checkbox($"Capture {k}", ref bCapture)) {
+                v.Capture = bCapture;
                 conf.Save();
             }
 
-            var notificationStyle = (int)conf.SelfNotification;
+            var notificationStyle = (int)v.NotificationStyle;
             ImGui.TextUnformatted("On Death");
             if (ImGui.Combo("##2", ref notificationStyle, "Do Nothing\0Chat Message\0Show Popup\0Open Recap")) {
-                conf.SelfNotification = (NotificationStyle)notificationStyle;
+                v.NotificationStyle = (NotificationStyle)notificationStyle;
                 conf.Save();
             }
 
-            var bOnlyInstances = conf.SelfNotificationOnlyInstances;
+            var bOnlyInstances = v.OnlyInstances;
             if (ImGui.Checkbox("Only in instances", ref bOnlyInstances)) {
-                conf.SelfNotificationOnlyInstances = bOnlyInstances;
+                v.OnlyInstances = bOnlyInstances;
                 conf.Save();
             }
 
             OnlyInInstancesTooltip();
+
+            var bDisableInPvp = v.DisableInPvp;
+            if (ImGui.Checkbox("Disable in PvP", ref bDisableInPvp)) {
+                v.DisableInPvp = bDisableInPvp;
+                conf.Save();
+            }
+
             ImGui.PopID();
+            ImGui.NextColumn();
         }
-        ImGui.NextColumn();
-        {
-            ImGui.PushID(1);
-            var bCapture = conf.CaptureParty;
-            if (ImGui.Checkbox("Capture Party", ref bCapture)) {
-                conf.CaptureParty = bCapture;
-                conf.Save();
-            }
 
-            var notificationStyle = (int)conf.PartyNotification;
-            ImGui.TextUnformatted("On Death");
-            if (ImGui.Combo("##2", ref notificationStyle, "Do Nothing\0Chat Message\0Show Popup\0Open Recap")) {
-                conf.PartyNotification = (NotificationStyle)notificationStyle;
-                conf.Save();
-            }
-
-            var bOnlyInstances = conf.PartyNotificationOnlyInstances;
-            if (ImGui.Checkbox("Only in instances", ref bOnlyInstances)) {
-                conf.PartyNotificationOnlyInstances = bOnlyInstances;
-                conf.Save();
-            }
-
-            OnlyInInstancesTooltip();
-            ImGui.PopID();
-        }
-        ImGui.NextColumn();
-        {
-            ImGui.PushID(2);
-            var bCapture = conf.CaptureOthers;
-            if (ImGui.Checkbox("Capture Others", ref bCapture)) {
-                conf.CaptureOthers = bCapture;
-                conf.Save();
-            }
-
-            var notificationStyle = (int)conf.OthersNotification;
-            ImGui.TextUnformatted("On Death");
-            if (ImGui.Combo("##2", ref notificationStyle, "Do Nothing\0Chat Message\0Show Popup\0Open Recap")) {
-                conf.OthersNotification = (NotificationStyle)notificationStyle;
-                conf.Save();
-            }
-
-            var bOnlyInstances = conf.OthersNotificationOnlyInstances;
-            if (ImGui.Checkbox("Only in instances", ref bOnlyInstances)) {
-                conf.OthersNotificationOnlyInstances = bOnlyInstances;
-                conf.Save();
-            }
-
-            OnlyInInstancesTooltip();
-            ImGui.PopID();
-        }
         ImGui.Columns();
         ImGui.Separator();
         ImGui.Spacing();

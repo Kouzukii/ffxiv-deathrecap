@@ -19,13 +19,13 @@ public class ConditionEvaluator {
     }
 
     public bool ShouldCapture(uint actorId) {
-        if (plugin.Configuration.CaptureOthers)
+        if (plugin.Configuration.Others.Capture)
             return true;
 
-        if (plugin.Configuration.CaptureSelf && actorId == Service.ObjectTable[0]?.ObjectId)
+        if (plugin.Configuration.Self.Capture && actorId == Service.ObjectTable[0]?.ObjectId)
             return true;
 
-        if (plugin.Configuration.CaptureParty && LookupPartyMember(actorId))
+        if (plugin.Configuration.Party.Capture && LookupPartyMember(actorId))
             return true;
 
         return false;
@@ -33,22 +33,31 @@ public class ConditionEvaluator {
 
     public NotificationStyle GetNotificationType(uint actorId) {
         if (actorId == Service.ObjectTable[0]?.ObjectId) {
-            if (!plugin.Configuration.SelfNotificationOnlyInstances || Service.Condition[ConditionFlag.BoundByDuty])
-                return plugin.Configuration.SelfNotification;
+            if (plugin.Configuration.Self.OnlyInstances && !Service.Condition[ConditionFlag.BoundByDuty])
+                return NotificationStyle.None;
 
-            return NotificationStyle.None;
+            if (plugin.Configuration.Self.DisableInPvp && Service.ClientState.IsPvP)
+                return NotificationStyle.None;
+
+            return plugin.Configuration.Self.NotificationStyle;
         }
 
         if (LookupPartyMember(actorId)) {
-            if (!plugin.Configuration.PartyNotificationOnlyInstances || Service.Condition[ConditionFlag.BoundByDuty])
-                return plugin.Configuration.PartyNotification;
+            if (plugin.Configuration.Party.OnlyInstances && !Service.Condition[ConditionFlag.BoundByDuty])
+                return NotificationStyle.None;
 
-            return NotificationStyle.None;
+            if (plugin.Configuration.Party.DisableInPvp && Service.ClientState.IsPvP)
+                return NotificationStyle.None;
+
+            return plugin.Configuration.Party.NotificationStyle;
         }
 
-        if (!plugin.Configuration.OthersNotificationOnlyInstances || Service.Condition[ConditionFlag.BoundByDuty])
-            return plugin.Configuration.OthersNotification;
+        if (plugin.Configuration.Others.OnlyInstances && !Service.Condition[ConditionFlag.BoundByDuty])
+            return NotificationStyle.None;
 
-        return NotificationStyle.None;
+        if (plugin.Configuration.Others.DisableInPvp && Service.ClientState.IsPvP)
+            return NotificationStyle.None;
+
+        return plugin.Configuration.Others.NotificationStyle;
     }
 }

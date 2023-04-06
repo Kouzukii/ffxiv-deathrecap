@@ -1,5 +1,6 @@
 using Dalamud.Data;
 using Dalamud.Game;
+using Dalamud.Game.ClientState;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Objects;
 using Dalamud.Game.ClientState.Party;
@@ -40,6 +41,10 @@ internal class Service {
     [PluginService]
     [RequiredVersion("1.0")]
     internal static Condition Condition { get; private set; }
+
+    [PluginService]
+    [RequiredVersion("1.0")]
+    internal static ClientState ClientState { get; private set; }
 
     [PluginService]
     [RequiredVersion("1.0")]
