@@ -166,7 +166,6 @@ public class DeathRecapWindow : Window {
                 DrawCombatHistogram(death);
             else
                 DrawCombatEventTable(death);
-                
         } catch (Exception e) {
             PluginLog.Error(e, "Failed to draw window");
         }

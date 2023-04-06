@@ -11,20 +11,15 @@ namespace DeathRecap.UI;
 public class ConfigWindow : Window {
     private readonly DeathRecapPlugin plugin;
 
-    public ConfigWindow(DeathRecapPlugin plugin) : base("Death Recap Config") {
+    public ConfigWindow(DeathRecapPlugin plugin) : base("Death Recap Config", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize) {
         this.plugin = plugin;
 
-        SizeConstraints = new WindowSizeConstraints {
-            MinimumSize = new Vector2(580, 320),
-            MaximumSize = new Vector2(580, 320)
-        };
-        
-        Flags |= ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize;
+        Size = new Vector2(580, 320);
     }
 
     public override void Draw() {
         var conf = plugin.Configuration;
-        
+
         ImGui.TextUnformatted("Capture Settings");
         ImGui.Separator();
         ImGui.Columns(3);
@@ -148,28 +143,23 @@ public class ConfigWindow : Window {
         }
     }
 
-    private void ChatMessageTypeTooltip() {
+    private static void ChatMessageTypeTooltip() {
         if (ImGui.IsItemHovered()) {
-            ImGui.BeginTooltip();
-            ImGui.TextUnformatted(
-                "Filter category of the \"Chat Message\" death notification.\n\"Debug\" will show up in all chat tabs regardless of configuration.\nNote that this will only affect the way the notification is displayed to you. They will never be visible to others.");
-            ImGui.EndTooltip();
+            ImGui.SetTooltip("Filter category of the \"Chat Message\" death notification.\n" +
+                             "\"Debug\" will show up in all chat tabs regardless of configuration.\n" +
+                             "Note that this will only affect the way the notification is displayed to you. They will never be visible to others.");
         }
     }
 
     private static void ChatTipTooltip() {
         if (ImGui.IsItemHovered()) {
-            ImGui.BeginTooltip();
-            ImGui.TextUnformatted("Prints the command in the chat to reopen the window the first time you close the Death Recap.");
-            ImGui.EndTooltip();
+            ImGui.SetTooltip("Prints the command in the chat to reopen the window the first time you close the Death Recap.");
         }
     }
 
-    private void OnlyInInstancesTooltip() {
+    private static void OnlyInInstancesTooltip() {
         if (ImGui.IsItemHovered()) {
-            ImGui.BeginTooltip();
-            ImGui.TextUnformatted("Will only show a death notification when in an instance (e.g. a Dungeon)");
-            ImGui.EndTooltip();
+            ImGui.SetTooltip("Will only show a death notification when in an instance (e.g. a Dungeon)");
         }
     }
 }

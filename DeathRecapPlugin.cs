@@ -12,6 +12,7 @@ namespace DeathRecap;
 
 public class DeathRecapPlugin : IDalamudPlugin {
     public string Name => "DeathRecap";
+
     public DeathRecapWindow Window { get; }
 
     public ConfigWindow ConfigWindow { get; }
@@ -23,8 +24,8 @@ public class DeathRecapPlugin : IDalamudPlugin {
     public CombatEventCapture CombatEventCapture { get; }
 
     public NotificationHandler NotificationHandler { get; }
-    
-    public WindowSystem WindowSystem { get; } 
+
+    public WindowSystem WindowSystem { get; }
 
     public Dictionary<uint, List<Death>> DeathsPerPlayer { get; } = new();
 
@@ -46,9 +47,9 @@ public class DeathRecapPlugin : IDalamudPlugin {
         WindowSystem.AddWindow(NotificationHandler);
 
         pluginInterface.UiBuilder.Draw += () => WindowSystem.Draw();
-        pluginInterface.UiBuilder.OpenConfigUi += () => ConfigWindow.IsOpen ^= true;
+        pluginInterface.UiBuilder.OpenConfigUi += () => ConfigWindow.Toggle();
         Service.Framework.Update += FrameworkOnUpdate;
-        var commandInfo = new CommandInfo((_, _) => Window.IsOpen ^= true) { HelpMessage = "Open the death recap window" };
+        var commandInfo = new CommandInfo((_, _) => Window.Toggle()) { HelpMessage = "Open the death recap window" };
         Service.CommandManager.AddHandler("/deathrecap", commandInfo);
         Service.CommandManager.AddHandler("/dr", commandInfo);
 

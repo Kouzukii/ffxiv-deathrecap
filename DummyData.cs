@@ -689,8 +689,8 @@ internal static class DummyData {
         });
         plugin.DeathsPerPlayer.AddEntry(0u,
             new Death {
-                PlayerId = 275579810,
-                PlayerName = "Scholar",
+                PlayerId = 0,
+                PlayerName = "Testing",
                 TimeOfDeath = DateTime.Parse("2022-09-29T19:55:43.9918+02:00"),
                 Events = new List<CombatEvent> {
                     new CombatEvent.StatusEffect {
@@ -1449,6 +1449,7 @@ internal static class DummyData {
             });
 
         plugin.NotificationHandler.DisplayDeath(plugin.DeathsPerPlayer[0][0]);
+        plugin.NotificationHandler.DisplayDeath(plugin.DeathsPerPlayer[0][1]);
         plugin.Window.IsOpen = true;
     }
 }
