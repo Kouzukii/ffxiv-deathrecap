@@ -30,7 +30,7 @@ public class DeathRecapWindow : Window {
 
     private readonly DeathRecapPlugin plugin;
 
-    private readonly Dictionary<ushort, TextureWrap> textures = new();
+    private readonly Dictionary<uint, TextureWrap> textures = new();
 
     private bool hasShownTip;
 
@@ -329,7 +329,7 @@ public class DeathRecapWindow : Window {
 
                             ImGui.TableNextColumn(); // Amount
                             ImGui.AlignTextToFramePadding();
-                            ImGuiHelper.TextColored(ColorHealingText, $"+{h.Amount:N0}");
+                            ImGuiHelper.TextColored(ColorHealingText, $"+{h.Amount:N0}{(h.Crit ? "!" : "")}");
 
                             ImGui.TableNextColumn(); // Ability
                             if (GetIconImage(h.Icon) is { } img)
@@ -737,7 +737,7 @@ public class DeathRecapWindow : Window {
         ImGuiHelper.TextColored(ColorGrey, $"{(e.Snapshot.Time - deathTime).TotalSeconds:N1}s");
     }
 
-    private TextureWrap? GetIconImage(ushort? icon) {
+    private TextureWrap? GetIconImage(uint? icon) {
         if (icon is { } u) {
             if (textures.TryGetValue(u, out var tex))
                 return tex;

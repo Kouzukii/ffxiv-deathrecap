@@ -16,7 +16,8 @@ public class CombatEventCapture : IDisposable {
     private readonly Dictionary<uint, List<CombatEvent>> combatEvents = new();
     private readonly DeathRecapPlugin plugin;
 
-    private delegate void ReceiveAbilityDelegate(int sourceId, IntPtr sourceCharacter, IntPtr pos, IntPtr effectHeader, IntPtr effectArray, IntPtr effectTrail);
+    private unsafe delegate void ReceiveAbilityDelegate(
+        int sourceId, IntPtr sourceCharacter, IntPtr pos, ActionEffectHeader* effectHeader, ActionEffect* effectArray, ulong* effectTrail);
 
     private delegate void ReceiveActorControlSelfDelegate(
         uint entityId, uint id, uint arg0, uint arg1, uint arg2, uint arg3, uint arg4, uint arg5,
@@ -52,7 +53,7 @@ public class CombatEventCapture : IDisposable {
     // ffxiv_dx11.exe+98C4F6 - F3 0F10 05 226C5B01   - movss xmm0,[ffxiv_dx11.exe+1F43120] { (0.00) }
     // ffxiv_dx11.exe+98C4FE - 48 8D 05 132DE900     - lea rax,[ffxiv_dx11.exe+181F218]
     // ffxiv_dx11.exe+98C505 - F3 0F10 0D 176C5B01   - movss xmm1,[ffxiv_dx11.exe+1F43124] { (0.00) }
-    [Signature("4C 89 44 24 ?? 55 56 41 54 41 55 41 56 41 57 48 8D 6C 24 ??", DetourName = nameof(ReceiveAbilityEffectDetour))]
+    [Signature("40 55 53 57 41 54 41 55 41 56 41 57 48 8D AC 24 60 FF FF FF 48 81 EC A0 01 00 00", DetourName = nameof(ReceiveAbilityEffectDetour))]
     private readonly Hook<ReceiveAbilityDelegate> receiveAbilityEffectHook = null!;
 
     // ffxiv_dx11.exe+6C3ED9 - E8 526B0600           - call ffxiv_dx11.exe+72AA30
@@ -119,23 +120,19 @@ public class CombatEventCapture : IDisposable {
     }
 
     private unsafe void ReceiveAbilityEffectDetour(
-        int sourceId, IntPtr sourceCharacter, IntPtr pos, IntPtr effectHeader, IntPtr effectArray,
-        IntPtr effectTrail) {
+        int sourceId, IntPtr sourceCharacter, IntPtr pos, ActionEffectHeader* effectHeader, ActionEffect* effectArray, ulong* effectTrail) {
         receiveAbilityEffectHook.Original(sourceId, sourceCharacter, pos, effectHeader, effectArray, effectTrail);
 
         try {
-            var message = (ActionEffectHeader*)effectHeader;
-            var targetIds = (ulong*)effectTrail;
-            var effectData = (byte*)effectArray;
-            uint targets = message->EffectCount;
+            uint targets = effectHeader->EffectCount;
 
             if (targets == 0)
                 return;
 
-            var actionId = message->EffectDisplayType switch {
-                ActionEffectDisplayType.MountName => 218103808 + message->ActionId,
-                ActionEffectDisplayType.ShowItemName => 33554432 + message->ActionId,
-                _ => message->ActionAnimationId
+            var actionId = effectHeader->EffectDisplayType switch {
+                ActionEffectDisplayType.MountName => 0xD000000 + effectHeader->ActionId,
+                ActionEffectDisplayType.ShowItemName => 0x2000000 + effectHeader->ActionId,
+                _ => effectHeader->ActionAnimationId
             };
             Action? action = null;
             string? source = null;
@@ -143,27 +140,27 @@ public class CombatEventCapture : IDisposable {
             List<uint>? additionalStatus = null;
 
             for (var i = 0; i < targets; i++) {
-                var actionTargetId = (uint)(targetIds[i] & uint.MaxValue);
+                var actionTargetId = (uint)(effectTrail[i] & uint.MaxValue);
                 if (!plugin.ConditionEvaluator.ShouldCapture(actionTargetId))
                     continue;
                 if (Service.ObjectTable.SearchById(actionTargetId) is PlayerCharacter p)
                     for (var j = 0; j < 8; j++) {
-                        var actionIndex = i * 64 + j * 8;
-                        if (effectData[actionIndex] == 0)
+                        ref var actionEffect = ref effectArray[i * 8 + j];
+                        if (actionEffect.EffectType == 0)
                             continue;
-                        var amount = ((uint)effectData[actionIndex + 7] << 8) + effectData[actionIndex + 6];
-                        if ((effectData[actionIndex + 5] & 0x40) == 0x40)
-                            amount += (uint)effectData[actionIndex + 4] << 16;
+                        uint amount = actionEffect.Value;
+                        if ((actionEffect.Flags2 & 0x40) == 0x40)
+                            amount += (uint)actionEffect.Flags1 << 16;
 
-                        var actionType = ConvertActionType(effectData[actionIndex]);
                         action ??= Service.DataManager.Excel.GetSheet<Action>()?.GetRow(actionId);
                         gameObject ??= Service.ObjectTable.SearchById((uint)sourceId);
                         source ??= gameObject?.Name.TextValue;
 
-                        switch (actionType) {
-                            case ActionType.Ability:
-                            case ActionType.AbilityBlocked:
-                            case ActionType.AbilityParried:
+                        switch (actionEffect.EffectType) {
+                            case ActionEffectType.Miss:
+                            case ActionEffectType.Damage:
+                            case ActionEffectType.BlockedDamage:
+                            case ActionEffectType.ParriedDamage:
                                 combatEvents.AddEntry(actionTargetId,
                                     new CombatEvent.DamageTaken {
                                         Snapshot =
@@ -175,15 +172,15 @@ public class CombatEventCapture : IDisposable {
                                         Amount = amount,
                                         Action = action?.ActionCategory.Row == 1 ? "Auto-attack" : action?.Name?.RawString?.Demangle() ?? "",
                                         Icon = action?.Icon,
-                                        Crit = (effectData[actionIndex + 1] & 1) == 1,
-                                        DirectHit = (effectData[actionIndex + 1] & 2) == 2,
-                                        DamageType = (DamageType)(effectData[actionIndex + 2] & 0xF),
-                                        Parried = actionType == ActionType.AbilityParried,
-                                        Blocked = actionType == ActionType.AbilityBlocked,
-                                        DisplayType = message->EffectDisplayType
+                                        Crit = (actionEffect.Param0 & 0x20) == 0x20,
+                                        DirectHit = (actionEffect.Param0 & 0x40) == 0x40,
+                                        DamageType = (DamageType)(actionEffect.Param1 & 0xF),
+                                        Parried = actionEffect.EffectType == ActionEffectType.ParriedDamage,
+                                        Blocked = actionEffect.EffectType == ActionEffectType.BlockedDamage,
+                                        DisplayType = effectHeader->EffectDisplayType
                                     });
                                 break;
-                            case ActionType.Healing:
+                            case ActionEffectType.Heal:
                                 combatEvents.AddEntry(actionTargetId,
                                     new CombatEvent.Healed {
                                         Snapshot = p.Snapshot(true),
@@ -191,7 +188,7 @@ public class CombatEventCapture : IDisposable {
                                         Amount = amount,
                                         Action = action?.Name?.RawString?.Demangle() ?? "",
                                         Icon = action?.Icon,
-                                        Crit = (effectData[actionIndex + 2] & 1) == 1
+                                        Crit = (actionEffect.Param1 & 0x20) == 0x20
                                     });
                                 break;
                         }
@@ -203,8 +200,7 @@ public class CombatEventCapture : IDisposable {
     }
 
     private void ReceiveActorControlSelfDetour(
-        uint entityId, uint type, uint buffId, uint param1, uint param2, uint sourceId, uint arg4, uint arg5,
-        ulong targetId, byte a10) {
+        uint entityId, uint type, uint buffId, uint param1, uint param2, uint sourceId, uint arg4, uint arg5, ulong targetId, byte a10) {
         receiveActorControlSelfHook.Original(entityId, type, buffId, param1, param2, sourceId, arg4, arg5, targetId, a10);
 
         try {
@@ -215,7 +211,7 @@ public class CombatEventCapture : IDisposable {
                 return;
 
             switch ((ActorControlCategory)type) {
-                case ActorControlCategory.DoT when param1 == 3:
+                case ActorControlCategory.DoT:
                     combatEvents.AddEntry(entityId, new CombatEvent.DoT { Snapshot = p.Snapshot(), Amount = param2 });
                     break;
                 case ActorControlCategory.HoT:
@@ -275,26 +271,6 @@ public class CombatEventCapture : IDisposable {
         } catch (Exception e) {
             PluginLog.Error(e, "Caught unexpected exception");
         }
-    }
-
-    private static ActionType ConvertActionType(byte ability) {
-        return ability switch {
-            1 => ActionType.Ability,
-            2 => ActionType.Ability,
-            3 => ActionType.Ability,
-            4 => ActionType.Healing,
-            5 => ActionType.AbilityBlocked,
-            6 => ActionType.AbilityParried,
-            10 => ActionType.PowerDrain,
-            11 => ActionType.PowerHealing,
-            13 => ActionType.TpHeal,
-            14 => ActionType.Buff,
-            15 => ActionType.Buff,
-            24 => ActionType.Threat,
-            25 => ActionType.Threat,
-            52 => ActionType.Buff,
-            _ => ActionType.Other
-        };
     }
 
     public void CleanCombatEvents() {
