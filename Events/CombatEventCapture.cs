@@ -20,8 +20,7 @@ public class CombatEventCapture : IDisposable {
         int sourceId, IntPtr sourceCharacter, IntPtr pos, ActionEffectHeader* effectHeader, ActionEffect* effectArray, ulong* effectTrail);
 
     private delegate void ReceiveActorControlSelfDelegate(
-        uint entityId, uint id, uint arg0, uint arg1, uint arg2, uint arg3, uint arg4, uint arg5,
-        ulong targetId, byte a10);
+        uint entityId, uint type, uint a3, uint amount, uint a5, uint source, uint a7, uint a8, ulong a9, byte flag);
 
     private delegate void ActionIntegrityDelegate(uint targetId, IntPtr actionIntegrityData, bool isReplay);
 
@@ -199,9 +198,8 @@ public class CombatEventCapture : IDisposable {
         }
     }
 
-    private void ReceiveActorControlSelfDetour(
-        uint entityId, uint type, uint buffId, uint param1, uint param2, uint sourceId, uint arg4, uint arg5, ulong targetId, byte a10) {
-        receiveActorControlSelfHook.Original(entityId, type, buffId, param1, param2, sourceId, arg4, arg5, targetId, a10);
+    private void ReceiveActorControlSelfDetour(uint entityId, uint type, uint a3, uint amount, uint a5, uint source, uint a7, uint a8, ulong a9, byte flag) {
+        receiveActorControlSelfHook.Original(entityId, type, a3, amount, a5, source, a7, a8, a9, flag);
 
         try {
             if (!plugin.ConditionEvaluator.ShouldCapture(entityId))
@@ -212,10 +210,10 @@ public class CombatEventCapture : IDisposable {
 
             switch ((ActorControlCategory)type) {
                 case ActorControlCategory.DoT:
-                    combatEvents.AddEntry(entityId, new CombatEvent.DoT { Snapshot = p.Snapshot(), Amount = param2 });
+                    combatEvents.AddEntry(entityId, new CombatEvent.DoT { Snapshot = p.Snapshot(), Amount = amount });
                     break;
                 case ActorControlCategory.HoT:
-                    combatEvents.AddEntry(entityId, new CombatEvent.HoT { Snapshot = p.Snapshot(), Amount = param1 });
+                    combatEvents.AddEntry(entityId, new CombatEvent.HoT { Snapshot = p.Snapshot(), Amount = amount });
                     break;
                 case ActorControlCategory.Death: {
                     if (combatEvents.Remove(entityId, out var events)) {
