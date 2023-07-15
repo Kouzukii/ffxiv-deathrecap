@@ -162,10 +162,12 @@ public class CombatEventCapture : IDisposable {
                             case ActionEffectType.ParriedDamage:
                                 combatEvents.AddEntry(actionTargetId,
                                     new CombatEvent.DamageTaken {
+                                        // 1715 = Malodorous, BLU Bad Breath
+                                        // 2115 = Conked, BLU Magic Hammer
                                         Snapshot =
                                             p.Snapshot(true,
                                                 additionalStatus ??= gameObject is BattleChara b
-                                                    ? b.StatusList.Select(s => s.StatusId).Where(s => s is 1203 or 1195 or 1193 or 860).ToList()
+                                                    ? b.StatusList.Select(s => s.StatusId).Where(s => s is 1203 or 1195 or 1193 or 860 or 1715 or 2115).ToList()
                                                     : new List<uint>()),
                                         Source = source,
                                         Amount = amount,
