@@ -165,7 +165,7 @@ public class CombatEventCapture : IDisposable {
                                         Snapshot =
                                             p.Snapshot(true,
                                                 additionalStatus ??= gameObject is BattleChara b
-                                                    ? b.StatusList.Select(s => s.StatusId).Where(s => s is 1203 or 1195 or 1193).ToList()
+                                                    ? b.StatusList.Select(s => s.StatusId).Where(s => s is 1203 or 1195 or 1193 or 860).ToList()
                                                     : new List<uint>()),
                                         Source = source,
                                         Amount = amount,
