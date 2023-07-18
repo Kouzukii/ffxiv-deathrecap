@@ -164,10 +164,11 @@ public class CombatEventCapture : IDisposable {
                                     new CombatEvent.DamageTaken {
                                         // 1715 = Malodorous, BLU Bad Breath
                                         // 2115 = Conked, BLU Magic Hammer
+                                        // 3642 = Candy Cane, BLU Candy Cane
                                         Snapshot =
                                             p.Snapshot(true,
                                                 additionalStatus ??= gameObject is BattleChara b
-                                                    ? b.StatusList.Select(s => s.StatusId).Where(s => s is 1203 or 1195 or 1193 or 860 or 1715 or 2115).ToList()
+                                                    ? b.StatusList.Select(s => s.StatusId).Where(s => s is 1203 or 1195 or 1193 or 860 or 1715 or 2115 or 3642).ToList()
                                                     : new List<uint>()),
                                         Source = source,
                                         Amount = amount,
