@@ -25,10 +25,10 @@ public class Configuration : IPluginConfiguration {
     public bool ShowTip { get; set; } = true;
     public int KeepCombatEventsForSeconds { get; set; } = 60;
     public int KeepDeathsForMinutes { get; set; } = 60;
-    public XivChatType ChatType { get; set; } = XivChatType.Debug;
+    public XivChatType ChatType { get; set; } = XivChatType.SystemMessage;
     public EventFilter EventFilter { get; set; } = EventFilter.Default;
     public bool ShowCombatHistogram { get; set; } = false;
-    public int Version { get; set; } = 1;
+    public int Version { get; set; } = 2;
 
     [JsonExtensionData] public IDictionary<string, JToken> AdditionalData { get; set; } = new Dictionary<string, JToken>();
 
@@ -56,6 +56,15 @@ public class Configuration : IPluginConfiguration {
 
             AdditionalData.Clear();
             Version = 1;
+            Save();
+        }
+
+        if (Version == 1) {
+            if (ChatType == XivChatType.Debug) {
+                ChatType = XivChatType.SystemMessage;
+            }
+
+            Version = 2;
             Save();
         }
     }

@@ -110,7 +110,7 @@ public class NotificationHandler : Window {
                 break;
             case NotificationStyle.Chat:
                 var chatMsg = HasAuthor(plugin.Configuration.ChatType)
-                    ? new SeString(chatLinkPayload, new TextPayload("has died "), new UIForegroundPayload(710), new TextPayload("[ Show Death Recap ]"),
+                    ? new SeString(chatLinkPayload, new TextPayload(" has died "), new UIForegroundPayload(710), new TextPayload("[ Show Death Recap ]"),
                         new UIForegroundPayload(0), new DeathNotificationPayload(death.TimeOfDeath.Ticks, death.PlayerId), RawPayload.LinkTerminator)
                     : new SeString(chatLinkPayload, new UIForegroundPayload(1), new TextPayload(death.PlayerName), new UIForegroundPayload(0),
                         new TextPayload(" has died "), new UIForegroundPayload(710), new TextPayload("[ Show Death Recap ]"), new UIForegroundPayload(0),
