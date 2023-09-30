@@ -6,6 +6,7 @@ using Dalamud.Interface;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Windowing;
 using Dalamud.Logging;
+using Dalamud.Plugin.Services;
 using DeathRecap.Events;
 using DeathRecap.Game;
 using ImGuiNET;
@@ -363,7 +364,7 @@ public class DeathRecapWindow : Window {
                             ImGui.TextUnformatted($"{s.Duration:N0}s");
 
                             ImGui.TableNextColumn(); // Ability
-                            if (GetIconImage(s.Icon) is { } img)
+                            if (GetIconImage(s.Icon, s.StackCount) is { } img)
                                 InlineIcon(img);
 
                             ImGui.AlignTextToFramePadding();
@@ -535,7 +536,10 @@ public class DeathRecapWindow : Window {
                 if (eCur.Snapshot.StatusEffects is { Count: > 0 } statusEffects && Service.DataManager.GetExcelSheet<Status>() is { } statusSheet) {
                     ImGui.TextUnformatted("Status Effects");
                     var printSeparator = false;
-                    foreach (var category in statusEffects.Select(s => statusSheet.GetRow(s)).OfType<Status>().Reverse().GroupBy(s => s.StatusCategory)
+                    foreach (var category in statusEffects.Select(s => (Status: statusSheet.GetRow(s.Id), s.StackCount))
+                                 .Where(s => s.Status != null)
+                                 .Reverse()
+                                 .GroupBy(s => s.Status!.StatusCategory)
                                  .OrderByDescending(s => s.Key)) {
                         if (category.Key == 0)
                             continue;
@@ -546,7 +550,7 @@ public class DeathRecapWindow : Window {
                             printSeparator = true;
 
                         foreach (var s in category) {
-                            if (GetIconImage(s.Icon) is { } img) {
+                            if (GetIconImage(s.Status!.Icon, s.StackCount) is { } img) {
                                 InlineIcon(img, 2);
                             }
                         }
@@ -646,7 +650,10 @@ public class DeathRecapWindow : Window {
         if (e.Snapshot.StatusEffects is { } statusEffects && Service.DataManager.GetExcelSheet<Status>() is { } sheet) {
             ImGui.TableNextColumn();
             var printSeparator = false;
-            foreach (var group in statusEffects.Select(s => sheet.GetRow(s)).OfType<Status>().Reverse().GroupBy(s => s.StatusCategory)
+            foreach (var group in statusEffects.Select(s => (Status: sheet.GetRow(s.Id), s.StackCount))
+                         .Where(s => s.Status != null)
+                         .Reverse()
+                         .GroupBy(s => s.Status!.StatusCategory)
                          .OrderByDescending(s => s.Key)) {
                 if (group.Key == 0)
                     continue;
@@ -658,14 +665,14 @@ public class DeathRecapWindow : Window {
                     printSeparator = true;
 
                 foreach (var s in group) {
-                    if (s.IsFcBuff)
+                    if (s.Status!.IsFcBuff)
                         continue;
-                    if (GetIconImage(s.Icon) is { } img) {
+                    if (GetIconImage(s.Status!.Icon, s.StackCount) is { } img) {
                         InlineIcon(img);
                         if (ImGui.IsItemHovered()) {
                             ImGui.BeginTooltip();
-                            ImGui.TextUnformatted(s.Name.RawString.Demangle());
-                            ImGui.TextUnformatted(s.Description.DisplayedText().Demangle());
+                            ImGui.TextUnformatted(s.Status!.Name.RawString.Demangle());
+                            ImGui.TextUnformatted(s.Status!.Description.DisplayedText().Demangle());
                             ImGui.EndTooltip();
                         }
                     }
@@ -737,12 +744,14 @@ public class DeathRecapWindow : Window {
         ImGuiHelper.TextColored(ColorGrey, $"{(e.Snapshot.Time - deathTime).TotalSeconds:N1}s");
     }
 
-    private TextureWrap? GetIconImage(uint? icon) {
-        if (icon is { } u) {
-            if (textures.TryGetValue(u, out var tex))
+    private TextureWrap? GetIconImage(uint? icon, uint stackCount = 0) {
+        if (icon is { } idx) {
+            if (stackCount > 1)
+                idx += stackCount - 1;
+            if (textures.TryGetValue(idx, out var tex))
                 return tex;
-            if (Service.DataManager.GetImGuiTextureIcon(u) is { } t)
-                return textures[u] = t;
+            if (Service.TextureProvider.GetIcon(idx, ITextureProvider.IconFlags.None) is { } t)
+                return textures[idx] = t;
         }
 
         return null;

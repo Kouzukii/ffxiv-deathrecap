@@ -20,15 +20,17 @@ public static class Extensions {
     }
 
     public static unsafe byte Barrier(this PlayerCharacter player) {
-        return ((Character*)player.Address)->ShieldValue;
+        return ((Character*)player.Address)->CharacterData.ShieldValue;
     }
 
     public static CombatEvent.EventSnapshot Snapshot(
         this PlayerCharacter player, bool snapEffects = false,
         IReadOnlyCollection<uint>? additionalStatus = null) {
-        var statusEffects = snapEffects ? player.StatusList.Select(s => s.StatusId).ToList() : null;
+        var statusEffects = snapEffects
+            ? player.StatusList.Select(s => new CombatEvent.StatusEffectSnapshot { Id = s.StatusId, StackCount = s.StackCount }).ToList()
+            : null;
         if (additionalStatus != null)
-            statusEffects?.AddRange(additionalStatus);
+            statusEffects?.AddRange(additionalStatus.Select(s => new CombatEvent.StatusEffectSnapshot { Id = s, StackCount = 0 }));
         var snapshot = new CombatEvent.EventSnapshot {
             Time = DateTime.Now,
             CurrentHp = player.CurrentHp,

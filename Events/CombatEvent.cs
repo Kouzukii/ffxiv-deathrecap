@@ -11,12 +11,18 @@ public record CombatEvent {
         public required DateTime Time { get; init; }
         public required uint CurrentHp { get; init; }
         public required uint MaxHp { get; init; }
-        public List<uint>? StatusEffects { get; init; }
+        public List<StatusEffectSnapshot>? StatusEffects { get; init; }
         public uint BarrierPercent { get; init; }
+    }
+
+    public record struct StatusEffectSnapshot {
+        public required uint Id;
+        public required uint StackCount;
     }
 
     public record StatusEffect : CombatEvent {
         public required uint Id { get; init; }
+        public required uint StackCount { get; init; }
         public required string? Source { get; init; }
         public required uint? Icon { get; init; }
         public required float Duration { get; init; }

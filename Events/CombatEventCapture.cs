@@ -168,7 +168,8 @@ public class CombatEventCapture : IDisposable {
                                         Snapshot =
                                             p.Snapshot(true,
                                                 additionalStatus ??= gameObject is BattleChara b
-                                                    ? b.StatusList.Select(s => s.StatusId).Where(s => s is 1203 or 1195 or 1193 or 860 or 1715 or 2115 or 3642).ToList()
+                                                    ? b.StatusList.Select(s => s.StatusId).Where(s => s is 1203 or 1195 or 1193 or 860 or 1715 or 2115 or 3642)
+                                                        .ToList()
                                                     : new List<uint>()),
                                         Source = source,
                                         Amount = amount,
@@ -251,7 +252,7 @@ public class CombatEventCapture : IDisposable {
                 var effectId = effect.EffectId;
                 if (effectId <= 0)
                     continue;
-                // TODO: Figure out what negative values mean
+                // negative durations will remove effect
                 if (effect.Duration < 0)
                     continue;
                 var source = Service.ObjectTable.SearchById(effect.SourceActorId)?.Name.TextValue;
@@ -261,6 +262,7 @@ public class CombatEventCapture : IDisposable {
                     new CombatEvent.StatusEffect {
                         Snapshot = p.Snapshot(),
                         Id = effectId,
+                        StackCount = effect.StackCount < status?.MaxStacks ? effect.StackCount : 0u,
                         Icon = status?.Icon,
                         Status = status?.Name.RawString.Demangle(),
                         Description = status?.Description.DisplayedText().Demangle(),

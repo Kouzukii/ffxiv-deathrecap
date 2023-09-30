@@ -10,7 +10,7 @@ public struct StatusEffectAddEntry {
 
     public ushort EffectId;
 
-    public ushort Unknown2;
+    public ushort StackCount;
 
     public ushort Unknown3;
 

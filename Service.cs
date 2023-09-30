@@ -8,6 +8,7 @@ using Dalamud.Game.Command;
 using Dalamud.Game.Gui;
 using Dalamud.IoC;
 using Dalamud.Plugin;
+using Dalamud.Plugin.Services;
 
 namespace DeathRecap;
 
@@ -25,6 +26,10 @@ internal class Service {
     [PluginService]
     [RequiredVersion("1.0")]
     internal static DataManager DataManager { get; private set; }
+
+    [PluginService]
+    [RequiredVersion("1.0")]
+    internal static ITextureProvider TextureProvider { get; private set; }
 
     [PluginService]
     [RequiredVersion("1.0")]

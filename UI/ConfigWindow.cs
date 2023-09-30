@@ -4,6 +4,7 @@ using System.Numerics;
 using Dalamud.Game.Text;
 using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
+using Dalamud.Utility;
 using ImGuiNET;
 
 namespace DeathRecap.UI;
@@ -67,7 +68,8 @@ public class ConfigWindow : Window {
         ImGui.TextUnformatted("Chat Message Type");
         ImGui.SameLine();
         ImGui.SetNextItemWidth(150 * ImGuiHelpers.GlobalScale);
-        if (ImGui.Combo("##3", ref chatType, string.Join('\0', chatTypes.Select(t => t.GetDetails()?.FancyName ?? t.ToString())), 10)) {
+        if (ImGui.Combo("##3", ref chatType, string.Join('\0', chatTypes.Select(t => t.GetAttribute<XivChatTypeInfoAttribute>()?.FancyName ?? t.ToString())),
+                10)) {
             conf.ChatType = chatTypes[chatType];
             conf.Save();
         }
