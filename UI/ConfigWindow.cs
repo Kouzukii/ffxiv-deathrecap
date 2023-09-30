@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using System.Numerics;
 using Dalamud.Game.Text;
-using Dalamud.Interface;
+using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
 using Dalamud.Utility;
 using ImGuiNET;

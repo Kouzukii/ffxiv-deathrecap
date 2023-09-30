@@ -4,7 +4,7 @@ using System.Text;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
-using Dalamud.Interface;
+using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
 using DeathRecap.Events;
 using DeathRecap.Game;
@@ -115,7 +115,7 @@ public class NotificationHandler : Window {
                     : new SeString(chatLinkPayload, new UIForegroundPayload(1), new TextPayload(death.PlayerName), new UIForegroundPayload(0),
                         new TextPayload(" has died "), new UIForegroundPayload(710), new TextPayload("[ Show Death Recap ]"), new UIForegroundPayload(0),
                         new DeathNotificationPayload(death.TimeOfDeath.Ticks, death.PlayerId), RawPayload.LinkTerminator);
-                Service.ChatGui.PrintChat(new XivChatEntry { Message = chatMsg, Type = plugin.Configuration.ChatType, Name = death.PlayerName });
+                Service.ChatGui.Print(new XivChatEntry { Message = chatMsg, Type = plugin.Configuration.ChatType, Name = death.PlayerName });
                 break;
             case NotificationStyle.OpenDeathRecap:
                 plugin.Window.IsOpen = true;

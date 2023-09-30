@@ -4,13 +4,13 @@ using System.Linq;
 using System.Numerics;
 using Dalamud.Interface;
 using Dalamud.Interface.Components;
+using Dalamud.Interface.Internal;
+using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
-using Dalamud.Logging;
 using Dalamud.Plugin.Services;
 using DeathRecap.Events;
 using DeathRecap.Game;
 using ImGuiNET;
-using ImGuiScene;
 using Lumina.Excel.GeneratedSheets;
 using Newtonsoft.Json;
 
@@ -31,7 +31,7 @@ public class DeathRecapWindow : Window {
 
     private readonly DeathRecapPlugin plugin;
 
-    private readonly Dictionary<uint, TextureWrap> textures = new();
+    private readonly Dictionary<uint, IDalamudTextureWrap> textures = new();
 
     private bool hasShownTip;
 
@@ -168,7 +168,7 @@ public class DeathRecapWindow : Window {
             else
                 DrawCombatEventTable(death);
         } catch (Exception e) {
-            PluginLog.Error(e, "Failed to draw window");
+            Service.PluginLog.Error(e, "Failed to draw window");
         }
     }
 
@@ -637,7 +637,7 @@ public class DeathRecapWindow : Window {
         }
     }
 
-    private static void InlineIcon(TextureWrap img, float paddingTop = 4, float paddingRight = 4) {
+    private static void InlineIcon(IDalamudTextureWrap img, float paddingTop = 4, float paddingRight = 4) {
         var imgPos = ImGui.GetCursorScreenPos() + new Vector2(0, paddingTop);
         // ReSharper disable once PossibleLossOfFraction
         var imgSize = ImGuiHelpers.ScaledVector2(16 * img.Width / img.Height, 16);
@@ -744,7 +744,7 @@ public class DeathRecapWindow : Window {
         ImGuiHelper.TextColored(ColorGrey, $"{(e.Snapshot.Time - deathTime).TotalSeconds:N1}s");
     }
 
-    private TextureWrap? GetIconImage(uint? icon, uint stackCount = 0) {
+    private IDalamudTextureWrap? GetIconImage(uint? icon, uint stackCount = 0) {
         if (icon is { } idx) {
             if (stackCount > 1)
                 idx += stackCount - 1;

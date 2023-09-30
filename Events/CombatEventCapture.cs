@@ -4,7 +4,6 @@ using System.Linq;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Hooking;
-using Dalamud.Logging;
 using Dalamud.Utility.Signatures;
 using DeathRecap.Game;
 using Lumina.Excel.GeneratedSheets;
@@ -111,7 +110,7 @@ public class CombatEventCapture : IDisposable {
     public CombatEventCapture(DeathRecapPlugin plugin) {
         this.plugin = plugin;
 
-        SignatureHelper.Initialise(this);
+        Service.GameInteropProvider.InitializeFromAttributes(this);
 
         receiveAbilityEffectHook.Enable();
         receiveActorControlSelfHook.Enable();
@@ -198,7 +197,7 @@ public class CombatEventCapture : IDisposable {
                     }
             }
         } catch (Exception e) {
-            PluginLog.Error(e, "Caught unexpected exception");
+            Service.PluginLog.Error(e, "Caught unexpected exception");
         }
     }
 
@@ -230,7 +229,7 @@ public class CombatEventCapture : IDisposable {
                 }
             }
         } catch (Exception e) {
-            PluginLog.Error(e, "Caught unexpected exception");
+            Service.PluginLog.Error(e, "Caught unexpected exception");
         }
     }
 
@@ -272,7 +271,7 @@ public class CombatEventCapture : IDisposable {
                     });
             }
         } catch (Exception e) {
-            PluginLog.Error(e, "Caught unexpected exception");
+            Service.PluginLog.Error(e, "Caught unexpected exception");
         }
     }
 
@@ -315,7 +314,7 @@ public class CombatEventCapture : IDisposable {
             foreach (var entry in entriesToRemove)
                 plugin.DeathsPerPlayer.Remove(entry);
         } catch (Exception e) {
-            PluginLog.LogError(e, "Error while clearing events");
+            Service.PluginLog.Error(e, "Error while clearing events");
         }
     }
 

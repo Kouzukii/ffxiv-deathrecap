@@ -1,18 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using Dalamud.Game;
 using Dalamud.Game.Command;
 using Dalamud.Interface.Windowing;
-using Dalamud.Logging;
 using Dalamud.Plugin;
+using Dalamud.Plugin.Services;
 using DeathRecap.Events;
 using DeathRecap.UI;
 
 namespace DeathRecap;
 
 public class DeathRecapPlugin : IDalamudPlugin {
-    public string Name => "DeathRecap";
-
     public DeathRecapWindow Window { get; }
 
     public ConfigWindow ConfigWindow { get; }
@@ -47,6 +44,7 @@ public class DeathRecapPlugin : IDalamudPlugin {
         WindowSystem.AddWindow(NotificationHandler);
 
         pluginInterface.UiBuilder.Draw += () => WindowSystem.Draw();
+        pluginInterface.UiBuilder.OpenMainUi += () => Window.Toggle();
         pluginInterface.UiBuilder.OpenConfigUi += () => ConfigWindow.Toggle();
         Service.Framework.Update += FrameworkOnUpdate;
         var commandInfo = new CommandInfo((_, _) => Window.Toggle()) { HelpMessage = "Open the death recap window" };
@@ -57,12 +55,12 @@ public class DeathRecapPlugin : IDalamudPlugin {
         try {
             DummyData.AddDummyData(this);
         } catch (Exception e) {
-            PluginLog.Log(e, "Failed to add dummy data");
+            Service.PluginLog.Error(e, "Failed to add dummy data");
         }
 #endif
     }
 
-    private void FrameworkOnUpdate(Framework framework) {
+    private void FrameworkOnUpdate(IFramework framework) {
 #if !DEBUG
         var now = DateTime.Now;
         if ((now - lastClean).TotalSeconds >= 10) {

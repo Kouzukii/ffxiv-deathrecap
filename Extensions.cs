@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Dalamud.Game.ClientState.Objects.SubKinds;
-using Dalamud.Logging;
 using DeathRecap.Events;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.LayoutEngine;
@@ -89,7 +88,7 @@ public static class Extensions {
                 }
             }
 
-            PluginLog.LogWarning($"Unknown name {name}");
+            Service.PluginLog.Warning($"Unknown name {name}");
         }
 
         return name;
