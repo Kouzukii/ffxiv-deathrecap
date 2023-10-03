@@ -319,8 +319,8 @@ public class CombatEventCapture : IDisposable {
     }
 
     public void Dispose() {
-        receiveAbilityEffectHook.Disable();
-        actionIntegrityDelegateHook.Disable();
-        receiveActorControlSelfHook.Disable();
+        receiveAbilityEffectHook.Dispose();
+        actionIntegrityDelegateHook.Dispose();
+        receiveActorControlSelfHook.Dispose();
     }
 }
