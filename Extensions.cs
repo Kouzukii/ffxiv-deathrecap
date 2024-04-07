@@ -26,7 +26,8 @@ public static class Extensions {
         this PlayerCharacter player, bool snapEffects = false,
         IReadOnlyCollection<uint>? additionalStatus = null) {
         var statusEffects = snapEffects
-            ? player.StatusList.Select(s => new CombatEvent.StatusEffectSnapshot { Id = s.StatusId, StackCount = s.StackCount }).ToList()
+            ? player.StatusList.Select(s => new CombatEvent.StatusEffectSnapshot { Id = s.StatusId, StackCount = s.StatusId is 48 or 49 ? 0u : s.Param })
+                .ToList()
             : null;
         if (additionalStatus != null)
             statusEffects?.AddRange(additionalStatus.Select(s => new CombatEvent.StatusEffectSnapshot { Id = s, StackCount = 0 }));

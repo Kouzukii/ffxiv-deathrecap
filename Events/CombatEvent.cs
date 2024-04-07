@@ -57,6 +57,6 @@ public record CombatEvent {
         public required uint Amount { get; init; }
         public required string Action { get; init; }
         public bool Crit { get; init; }
-        public required ushort? Icon { get; init; }
+        public required uint? Icon { get; init; }
     }
 }

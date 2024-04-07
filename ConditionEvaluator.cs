@@ -3,13 +3,7 @@ using DeathRecap.UI;
 
 namespace DeathRecap;
 
-public class ConditionEvaluator {
-    private readonly DeathRecapPlugin plugin;
-
-    public ConditionEvaluator(DeathRecapPlugin plugin) {
-        this.plugin = plugin;
-    }
-
+public class ConditionEvaluator(DeathRecapPlugin plugin) {
     private static bool LookupPartyMember(uint actorId) {
         for (var i = 0; i < 8; i++)
             if (Service.PartyList[i]?.ObjectId is { } id)
