@@ -216,6 +216,21 @@ public class CombatEventCapture : IDisposable {
                     combatEvents.AddEntry(entityId, new CombatEvent.DoT { Snapshot = p.Snapshot(), Amount = amount });
                     break;
                 case ActorControlCategory.HoT:
+                    if (a3 != 0)
+                    {
+                        var source_name = Service.ObjectTable.SearchById(entityId)!.Name.TextValue;
+                        var status = Service.DataManager.GetExcelSheet<Status>()!.GetRow(a3);
+                        combatEvents.AddEntry(entityId, new CombatEvent.Healed
+                        {
+                            Snapshot = p.Snapshot(),
+                            Source = source_name,
+                            Amount = amount,
+                            Action = status?.Name.RawString?.Demangle() ?? "",
+                            Icon = (ushort?)(status?.Icon),
+                            Crit = source == 1
+                        });
+                        break;
+                    }
                     combatEvents.AddEntry(entityId, new CombatEvent.HoT { Snapshot = p.Snapshot(), Amount = amount });
                     break;
                 case ActorControlCategory.Death: {
