@@ -1,3 +1,4 @@
+using Dalamud.Game;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
@@ -30,6 +31,8 @@ internal class Service {
     [PluginService] internal static IPluginLog PluginLog { get; private set; }
 
     [PluginService] internal static IGameInteropProvider GameInteropProvider { get; private set; }
+    
+    [PluginService] public static ISigScanner SigScanner { get; private set; }
 
     internal static void Initialize(DalamudPluginInterface pluginInterface) {
         pluginInterface.Create<Service>();
