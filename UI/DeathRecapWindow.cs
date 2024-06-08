@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using Dalamud.Game.Text;
 using Dalamud.Interface;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Internal;
@@ -218,7 +219,7 @@ public class DeathRecapWindow : Window {
     }
 
     private void DrawCombatEventTable(Death? death) {
-        if (ImGui.BeginTable("deathrecap", 6,
+        if (ImGui.BeginTable("deathrecap", 7,
                 ImGuiTableFlags.Borders | ImGuiTableFlags.NoBordersInBody | ImGuiTableFlags.ScrollY | ImGuiTableFlags.Resizable | ImGuiTableFlags.Reorderable |
                 ImGuiTableFlags.Hideable)) {
             ImGui.TableSetupColumn("Time", ImGuiTableColumnFlags.WidthFixed);
@@ -227,12 +228,15 @@ public class DeathRecapWindow : Window {
             ImGui.TableSetupColumn("Source");
             ImGui.TableSetupColumn("HP Before");
             ImGui.TableSetupColumn("Status Effects");
+            ImGui.TableSetupColumn("Copy");
             ImGui.TableHeadersRow();
 
             if (death != null)
+            {
                 for (var i = death.Events.Count - 1; i >= 0; i--)
                     switch (death.Events[i]) {
                         case CombatEvent.HoT hot:
+                        {
                             if (!plugin.Configuration.EventFilter.HasFlag(EventFilter.Healing))
                                 continue;
                             ImGui.TableNextRow();
@@ -258,7 +262,9 @@ public class DeathRecapWindow : Window {
 
                             DrawHpColumn(hot, total);
                             break;
+                        }
                         case CombatEvent.DoT dot:
+                        {
                             if (!plugin.Configuration.EventFilter.HasFlag(EventFilter.Damage))
                                 continue;
                             ImGui.TableNextRow();
@@ -276,7 +282,20 @@ public class DeathRecapWindow : Window {
                             ImGui.TableNextColumn(); // Source
 
                             DrawHpColumn(dot);
+                            ImGui.TableNextColumn();
+                            ImGui.TableNextColumn();
+                            if (dot.Snapshot.CurrentHp<dot.Amount)
+                            {
+                                if (ImGui.Button("Copy"))
+                                {
+                                    var message = $"{death.PlayerName}:DOT:{dot.Amount},Hp:[{dot.Snapshot.CurrentHp}/{dot.Snapshot.MaxHp}],Overkill:{dot.Amount-dot.Snapshot.CurrentHp}";
+                                    ImGui.SetClipboardText(message);
+                                    //Chat.Instance.SendMessage($"/p {message}");
+                                    //Service.ChatGui.Print(new XivChatEntry(){Message = message,Type = XivChatType.Party});
+                                }
+                            }
                             break;
+                        }
                         case CombatEvent.DamageTaken dt: {
                             if (!plugin.Configuration.EventFilter.HasFlag(EventFilter.Damage))
                                 continue;
@@ -319,6 +338,31 @@ public class DeathRecapWindow : Window {
                             DrawHpColumn(dt);
 
                             DrawStatusEffectsColumn(dt);
+                            ImGui.TableNextColumn();
+                            if (dt.Snapshot.CurrentHp<dt.Amount)
+                            {
+                                if (ImGui.Button("Send"))
+                                {
+                                    var message = $"{death.PlayerName}:ReceiveAbility:{dt.Action},Hp:[{dt.Snapshot.CurrentHp}/{dt.Snapshot.MaxHp}],Overkill:{dt.Amount-dt.Snapshot.CurrentHp},";
+                                    var statusEffects = dt.Snapshot.StatusEffects;
+                                    var buffs = statusEffects.Where(buff => 
+                                            !Service.DataManager.GetExcelSheet<Status>()!.GetRow(buff.Id)!.IsFcBuff && 
+                                            Service.DataManager.GetExcelSheet<Status>()!.GetRow(buff.Id)!.StatusCategory != 2)
+                                        .Select(buff => Service.DataManager.GetExcelSheet<Status>()!.GetRow(buff.Id)!.Name);
+
+                                    var debuffs = statusEffects.Where(buff => 
+                                            Service.DataManager.GetExcelSheet<Status>()!.GetRow(buff.Id)!.StatusCategory == 2)
+                                        .Select(buff => Service.DataManager.GetExcelSheet<Status>()!.GetRow(buff.Id)!.Name);
+
+                                    var buffMessage = string.Join(",", buffs);
+                                    var debuffMessage = string.Join(",", debuffs);
+
+                                    message = $"{message}Buff:{buffMessage},Debuff:{debuffMessage}";
+                                    ImGui.SetClipboardText(message);
+                                    //Chat.Instance.SendMessage($"/p {message}");
+                                    //Service.ChatGui.Print(new XivChatEntry(){Message = message,Type = XivChatType.Party});
+                                }
+                            }
                             break;
                         }
                         case CombatEvent.Healed h: {
@@ -385,6 +429,7 @@ public class DeathRecapWindow : Window {
                             break;
                         }
                     }
+            }
 
             ImGui.EndTable();
         }
