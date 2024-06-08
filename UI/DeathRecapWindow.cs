@@ -228,7 +228,7 @@ public class DeathRecapWindow : Window {
             ImGui.TableSetupColumn("Source");
             ImGui.TableSetupColumn("HP Before");
             ImGui.TableSetupColumn("Status Effects");
-            ImGui.TableSetupColumn("Send");
+            ImGui.TableSetupColumn("Copy");
             ImGui.TableHeadersRow();
 
             if (death != null)
@@ -286,10 +286,11 @@ public class DeathRecapWindow : Window {
                             ImGui.TableNextColumn();
                             if (dot.Snapshot.CurrentHp<dot.Amount)
                             {
-                                if (ImGui.Button("Send"))
+                                if (ImGui.Button("Copy"))
                                 {
                                     var message = $"{death.PlayerName}:DOT:{dot.Amount},Hp:[{dot.Snapshot.CurrentHp}/{dot.Snapshot.MaxHp}],Overkill:{dot.Amount-dot.Snapshot.CurrentHp}";
-                                    Chat.Instance.SendMessage($"/p {message}");
+                                    ImGui.SetClipboardText(message);
+                                    //Chat.Instance.SendMessage($"/p {message}");
                                     //Service.ChatGui.Print(new XivChatEntry(){Message = message,Type = XivChatType.Party});
                                 }
                             }
@@ -357,7 +358,8 @@ public class DeathRecapWindow : Window {
                                     var debuffMessage = string.Join(",", debuffs);
 
                                     message = $"{message}Buff:{buffMessage},Debuff:{debuffMessage}";
-                                    Chat.Instance.SendMessage($"/p {message}");
+                                    ImGui.SetClipboardText(message);
+                                    //Chat.Instance.SendMessage($"/p {message}");
                                     //Service.ChatGui.Print(new XivChatEntry(){Message = message,Type = XivChatType.Party});
                                 }
                             }
