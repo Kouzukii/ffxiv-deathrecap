@@ -12,7 +12,7 @@ internal static class DummyData {
             PlayerId = 0,
             PlayerName = "Testing",
             TimeOfDeath = DateTime.Parse("2022-09-30T18:10:37.0213944+02:00"),
-            Events = new List<CombatEvent> {
+            Events = [
                 new CombatEvent.Healed {
                     Source = "Astrologian",
                     Amount = 18004,
@@ -34,6 +34,7 @@ internal static class DummyData {
                                 }
                         }
                 },
+
                 new CombatEvent.StatusEffect {
                     Category = StatusCategory.Beneficial,
                     Id = 2618,
@@ -45,6 +46,7 @@ internal static class DummyData {
                     Description = "Damage taken is reduced.",
                     Snapshot = new CombatEvent.EventSnapshot { Time = DateTime.Parse("2022-09-30T18:09:33.9858002+02:00"), CurrentHp = 50300, MaxHp = 64167 }
                 },
+
                 new CombatEvent.StatusEffect {
                     Category = StatusCategory.Beneficial,
                     Id = 2938,
@@ -56,18 +58,22 @@ internal static class DummyData {
                     Description = "Regenerating HP over time.",
                     Snapshot = new CombatEvent.EventSnapshot { Time = DateTime.Parse("2022-09-30T18:09:33.985809+02:00"), CurrentHp = 50300, MaxHp = 64167 }
                 },
+
                 new CombatEvent.HoT {
                     Amount = 2502,
                     Snapshot = new CombatEvent.EventSnapshot { Time = DateTime.Parse("2022-09-30T18:09:34.9231187+02:00"), CurrentHp = 50300, MaxHp = 64167 }
                 },
+
                 new CombatEvent.HoT {
                     Amount = 2650,
                     Snapshot = new CombatEvent.EventSnapshot { Time = DateTime.Parse("2022-09-30T18:09:37.9438292+02:00"), CurrentHp = 53443, MaxHp = 64167 }
                 },
+
                 new CombatEvent.HoT {
                     Amount = 2525,
                     Snapshot = new CombatEvent.EventSnapshot { Time = DateTime.Parse("2022-09-30T18:09:40.9158899+02:00"), CurrentHp = 56734, MaxHp = 64167 }
                 },
+
                 new CombatEvent.StatusEffect {
                     Category = StatusCategory.Beneficial,
                     Id = 1204,
@@ -79,14 +85,17 @@ internal static class DummyData {
                     Description = "Restoring MP over time.",
                     Snapshot = new CombatEvent.EventSnapshot { Time = DateTime.Parse("2022-09-30T18:09:41.3950098+02:00"), CurrentHp = 59259, MaxHp = 64167 }
                 },
+
                 new CombatEvent.HoT {
                     Amount = 2564,
                     Snapshot = new CombatEvent.EventSnapshot { Time = DateTime.Parse("2022-09-30T18:09:43.9296323+02:00"), CurrentHp = 59900, MaxHp = 64167 }
                 },
+
                 new CombatEvent.HoT {
                     Amount = 2478,
                     Snapshot = new CombatEvent.EventSnapshot { Time = DateTime.Parse("2022-09-30T18:09:46.9368415+02:00"), CurrentHp = 63105, MaxHp = 64167 }
                 },
+
                 new CombatEvent.StatusEffect {
                     Category = StatusCategory.Beneficial,
                     Id = 2599,
@@ -98,6 +107,7 @@ internal static class DummyData {
                     Description = "Damage dealt is increased.",
                     Snapshot = new CombatEvent.EventSnapshot { Time = DateTime.Parse("2022-09-30T18:09:51.2637863+02:00"), CurrentHp = 64167, MaxHp = 64167 }
                 },
+
                 new CombatEvent.StatusEffect {
                     Category = StatusCategory.Beneficial,
                     Id = 2600,
@@ -109,6 +119,7 @@ internal static class DummyData {
                     Description = "Grants Immortal Sacrifice to the reaper who applied this effect after successfully landing a weaponskill or spell.",
                     Snapshot = new CombatEvent.EventSnapshot { Time = DateTime.Parse("2022-09-30T18:09:51.2637952+02:00"), CurrentHp = 64167, MaxHp = 64167 }
                 },
+
                 new CombatEvent.StatusEffect {
                     Category = StatusCategory.Beneficial,
                     Id = 1890,
@@ -120,6 +131,7 @@ internal static class DummyData {
                     Description = "Primed to receive the healing effects of Horoscope.",
                     Snapshot = new CombatEvent.EventSnapshot { Time = DateTime.Parse("2022-09-30T18:09:51.8537222+02:00"), CurrentHp = 64167, MaxHp = 64167 }
                 },
+
                 new CombatEvent.StatusEffect {
                     Category = StatusCategory.Beneficial,
                     Id = 1951,
@@ -131,6 +143,7 @@ internal static class DummyData {
                     Description = "Damage taken is reduced.",
                     Snapshot = new CombatEvent.EventSnapshot { Time = DateTime.Parse("2022-09-30T18:09:52.305156+02:00"), CurrentHp = 64167, MaxHp = 64167 }
                 },
+
                 new CombatEvent.Healed {
                     Source = "Sage",
                     Amount = 3884,
@@ -157,6 +170,7 @@ internal static class DummyData {
                                 }
                         }
                 },
+
                 new CombatEvent.DamageTaken {
                     Source = "Proto-Carbuncle",
                     Amount = 21445,
@@ -187,6 +201,7 @@ internal static class DummyData {
                             BarrierPercent = 19
                         }
                 },
+
                 new CombatEvent.StatusEffect {
                     Category = StatusCategory.Beneficial,
                     Id = 2609,
@@ -201,6 +216,7 @@ internal static class DummyData {
                             Time = DateTime.Parse("2022-09-30T18:09:53.5204295+02:00"), CurrentHp = 64167, MaxHp = 64167, BarrierPercent = 19
                         }
                 },
+
                 new CombatEvent.Healed {
                     Source = "Astrologian",
                     Amount = 5144,
@@ -224,6 +240,7 @@ internal static class DummyData {
                                 }
                         }
                 },
+
                 new CombatEvent.StatusEffect {
                     Category = StatusCategory.Beneficial,
                     Id = 1839,
@@ -235,6 +252,7 @@ internal static class DummyData {
                     Description = "Magic damage taken is reduced.",
                     Snapshot = new CombatEvent.EventSnapshot { Time = DateTime.Parse("2022-09-30T18:09:58.4440242+02:00"), CurrentHp = 44004, MaxHp = 64167 }
                 },
+
                 new CombatEvent.StatusEffect {
                     Category = StatusCategory.Beneficial,
                     Id = 2611,
@@ -246,6 +264,7 @@ internal static class DummyData {
                     Description = "Healing magic potency of next spell cast is increased.",
                     Snapshot = new CombatEvent.EventSnapshot { Time = DateTime.Parse("2022-09-30T18:09:58.7843269+02:00"), CurrentHp = 44004, MaxHp = 64167 }
                 },
+
                 new CombatEvent.DamageTaken {
                     Source = "Proto-Carbuncle",
                     Amount = 42589,
@@ -272,6 +291,7 @@ internal static class DummyData {
                                 }
                         }
                 },
+
                 new CombatEvent.Healed {
                     Source = "Sage",
                     Amount = 21903,
@@ -296,6 +316,7 @@ internal static class DummyData {
                                 }
                         }
                 },
+
                 new CombatEvent.Healed {
                     Source = "Astrologian",
                     Amount = 5419,
@@ -318,6 +339,7 @@ internal static class DummyData {
                                 }
                         }
                 },
+
                 new CombatEvent.StatusEffect {
                     Category = StatusCategory.Beneficial,
                     Id = 1879,
@@ -329,10 +351,12 @@ internal static class DummyData {
                     Description = "Regenerating HP over time.",
                     Snapshot = new CombatEvent.EventSnapshot { Time = DateTime.Parse("2022-09-30T18:10:04.5000781+02:00"), CurrentHp = 27638, MaxHp = 64167 }
                 },
+
                 new CombatEvent.HoT {
                     Amount = 2738,
                     Snapshot = new CombatEvent.EventSnapshot { Time = DateTime.Parse("2022-09-30T18:10:04.9511633+02:00"), CurrentHp = 27638, MaxHp = 64167 }
                 },
+
                 new CombatEvent.StatusEffect {
                     Category = StatusCategory.Beneficial,
                     Id = 2620,
@@ -344,6 +368,7 @@ internal static class DummyData {
                     Description = "Regenerating HP over time.",
                     Snapshot = new CombatEvent.EventSnapshot { Time = DateTime.Parse("2022-09-30T18:10:06.6040586+02:00"), CurrentHp = 31017, MaxHp = 64167 }
                 },
+
                 new CombatEvent.StatusEffect {
                     Category = StatusCategory.Beneficial,
                     Id = 2621,
@@ -355,10 +380,12 @@ internal static class DummyData {
                     Description = "HP recovery via healing actions is increased.",
                     Snapshot = new CombatEvent.EventSnapshot { Time = DateTime.Parse("2022-09-30T18:10:06.6040674+02:00"), CurrentHp = 31017, MaxHp = 64167 }
                 },
+
                 new CombatEvent.HoT {
                     Amount = 5958,
                     Snapshot = new CombatEvent.EventSnapshot { Time = DateTime.Parse("2022-09-30T18:10:07.9374975+02:00"), CurrentHp = 31017, MaxHp = 64167 }
                 },
+
                 new CombatEvent.StatusEffect {
                     Category = StatusCategory.Beneficial,
                     Id = 2618,
@@ -370,6 +397,7 @@ internal static class DummyData {
                     Description = "Damage taken is reduced.",
                     Snapshot = new CombatEvent.EventSnapshot { Time = DateTime.Parse("2022-09-30T18:10:09.1391312+02:00"), CurrentHp = 37616, MaxHp = 64167 }
                 },
+
                 new CombatEvent.StatusEffect {
                     Category = StatusCategory.Beneficial,
                     Id = 2938,
@@ -381,18 +409,22 @@ internal static class DummyData {
                     Description = "Regenerating HP over time.",
                     Snapshot = new CombatEvent.EventSnapshot { Time = DateTime.Parse("2022-09-30T18:10:09.1391411+02:00"), CurrentHp = 37616, MaxHp = 64167 }
                 },
+
                 new CombatEvent.HoT {
                     Amount = 9009,
                     Snapshot = new CombatEvent.EventSnapshot { Time = DateTime.Parse("2022-09-30T18:10:10.9106977+02:00"), CurrentHp = 37616, MaxHp = 64167 }
                 },
+
                 new CombatEvent.HoT {
                     Amount = 8701,
                     Snapshot = new CombatEvent.EventSnapshot { Time = DateTime.Parse("2022-09-30T18:10:13.9443522+02:00"), CurrentHp = 47266, MaxHp = 64167 }
                 },
+
                 new CombatEvent.HoT {
                     Amount = 8502,
                     Snapshot = new CombatEvent.EventSnapshot { Time = DateTime.Parse("2022-09-30T18:10:16.9444801+02:00"), CurrentHp = 56608, MaxHp = 64167 }
                 },
+
                 new CombatEvent.DamageTaken {
                     Source = "Proto-Carbuncle",
                     Amount = 41434,
@@ -418,6 +450,7 @@ internal static class DummyData {
                                 }
                         }
                 },
+
                 new CombatEvent.StatusEffect {
                     Category = StatusCategory.Detrimental,
                     Id = 2941,
@@ -429,10 +462,12 @@ internal static class DummyData {
                     Description = "Magic damage taken is increased.",
                     Snapshot = new CombatEvent.EventSnapshot { Time = DateTime.Parse("2022-09-30T18:10:18.0280336+02:00"), CurrentHp = 22733, MaxHp = 64167 }
                 },
+
                 new CombatEvent.HoT {
                     Amount = 6963,
                     Snapshot = new CombatEvent.EventSnapshot { Time = DateTime.Parse("2022-09-30T18:10:19.9310721+02:00"), CurrentHp = 23374, MaxHp = 64167 }
                 },
+
                 new CombatEvent.Healed {
                     Source = "Earthly Star",
                     Amount = 17620,
@@ -457,6 +492,7 @@ internal static class DummyData {
                                 }
                         }
                 },
+
                 new CombatEvent.Healed {
                     Source = "Sage",
                     Amount = 2476,
@@ -480,6 +516,7 @@ internal static class DummyData {
                                 }
                         }
                 },
+
                 new CombatEvent.StatusEffect {
                     Category = StatusCategory.Beneficial,
                     Id = 2609,
@@ -494,6 +531,7 @@ internal static class DummyData {
                             Time = DateTime.Parse("2022-09-30T18:10:22.9448611+02:00"), CurrentHp = 51074, MaxHp = 64167, BarrierPercent = 12
                         }
                 },
+
                 new CombatEvent.HoT {
                     Amount = 3722,
                     Snapshot =
@@ -501,6 +539,7 @@ internal static class DummyData {
                             Time = DateTime.Parse("2022-09-30T18:10:22.9448717+02:00"), CurrentHp = 51074, MaxHp = 64167, BarrierPercent = 12
                         }
                 },
+
                 new CombatEvent.Healed {
                     Source = "Sage",
                     Amount = 7255,
@@ -525,6 +564,7 @@ internal static class DummyData {
                             BarrierPercent = 12
                         }
                 },
+
                 new CombatEvent.DoT {
                     Amount = 12794,
                     Snapshot =
@@ -532,6 +572,7 @@ internal static class DummyData {
                             Time = DateTime.Parse("2022-09-30T18:10:25.930989+02:00"), CurrentHp = 55437, MaxHp = 64167, BarrierPercent = 20
                         }
                 },
+
                 new CombatEvent.HoT {
                     Amount = 858,
                     Snapshot =
@@ -539,6 +580,7 @@ internal static class DummyData {
                             Time = DateTime.Parse("2022-09-30T18:10:25.9309947+02:00"), CurrentHp = 55437, MaxHp = 64167, BarrierPercent = 20
                         }
                 },
+
                 new CombatEvent.StatusEffect {
                     Category = StatusCategory.Beneficial,
                     Id = 160,
@@ -550,14 +592,17 @@ internal static class DummyData {
                     Description = "Spells cannot be interrupted by taking damage.",
                     Snapshot = new CombatEvent.EventSnapshot { Time = DateTime.Parse("2022-09-30T18:10:28.7365375+02:00"), CurrentHp = 51397, MaxHp = 64167 }
                 },
+
                 new CombatEvent.DoT {
                     Amount = 25415,
                     Snapshot = new CombatEvent.EventSnapshot { Time = DateTime.Parse("2022-09-30T18:10:28.9309607+02:00"), CurrentHp = 51397, MaxHp = 64167 }
                 },
+
                 new CombatEvent.HoT {
                     Amount = 859,
                     Snapshot = new CombatEvent.EventSnapshot { Time = DateTime.Parse("2022-09-30T18:10:28.930965+02:00"), CurrentHp = 51397, MaxHp = 64167 }
                 },
+
                 new CombatEvent.StatusEffect {
                     Category = StatusCategory.Beneficial,
                     Id = 2643,
@@ -573,6 +618,7 @@ internal static class DummyData {
                             Time = DateTime.Parse("2022-09-30T18:10:29.6255502+02:00"), CurrentHp = 26841, MaxHp = 64167, BarrierPercent = 7
                         }
                 },
+
                 new CombatEvent.StatusEffect {
                     Category = StatusCategory.Beneficial,
                     Id = 2613,
@@ -587,6 +633,7 @@ internal static class DummyData {
                             Time = DateTime.Parse("2022-09-30T18:10:29.6255603+02:00"), CurrentHp = 26841, MaxHp = 64167, BarrierPercent = 7
                         }
                 },
+
                 new CombatEvent.Healed {
                     Source = "Sage",
                     Amount = 7323,
@@ -613,6 +660,7 @@ internal static class DummyData {
                             BarrierPercent = 7
                         }
                 },
+
                 new CombatEvent.StatusEffect {
                     Category = StatusCategory.Beneficial,
                     Id = 2607,
@@ -627,6 +675,7 @@ internal static class DummyData {
                             Time = DateTime.Parse("2022-09-30T18:10:31.2851132+02:00"), CurrentHp = 34805, MaxHp = 64167, BarrierPercent = 28
                         }
                 },
+
                 new CombatEvent.StatusEffect {
                     Category = StatusCategory.Beneficial,
                     Id = 2683,
@@ -641,6 +690,7 @@ internal static class DummyData {
                             Time = DateTime.Parse("2022-09-30T18:10:31.5564633+02:00"), CurrentHp = 34805, MaxHp = 64167, BarrierPercent = 28
                         }
                 },
+
                 new CombatEvent.StatusEffect {
                     Category = StatusCategory.Beneficial,
                     Id = 2684,
@@ -654,6 +704,7 @@ internal static class DummyData {
                         Time = DateTime.Parse("2022-09-30T18:10:31.5564732+02:00"), CurrentHp = 34805, MaxHp = 64167, BarrierPercent = 28
                     }
                 },
+
                 new CombatEvent.StatusEffect {
                     Category = StatusCategory.Beneficial,
                     Id = 2685,
@@ -669,6 +720,7 @@ internal static class DummyData {
                             Time = DateTime.Parse("2022-09-30T18:10:31.5564771+02:00"), CurrentHp = 34805, MaxHp = 64167, BarrierPercent = 28
                         }
                 },
+
                 new CombatEvent.HoT {
                     Amount = 6167,
                     Snapshot =
@@ -676,6 +728,7 @@ internal static class DummyData {
                             Time = DateTime.Parse("2022-09-30T18:10:31.9446469+02:00"), CurrentHp = 34805, MaxHp = 64167, BarrierPercent = 28
                         }
                 },
+
                 new CombatEvent.HoT {
                     Amount = 936,
                     Snapshot =
@@ -683,6 +736,7 @@ internal static class DummyData {
                             Time = DateTime.Parse("2022-09-30T18:10:31.9446514+02:00"), CurrentHp = 34805, MaxHp = 64167, BarrierPercent = 28
                         }
                 },
+
                 new CombatEvent.DoT {
                     Amount = 26320,
                     Snapshot =
@@ -690,6 +744,7 @@ internal static class DummyData {
                             Time = DateTime.Parse("2022-09-30T18:10:31.9446675+02:00"), CurrentHp = 34805, MaxHp = 64167, BarrierPercent = 28
                         }
                 },
+
                 new CombatEvent.DamageTaken {
                     Source = "Proto-Carbuncle",
                     Amount = 36472,
@@ -718,6 +773,7 @@ internal static class DummyData {
                         BarrierPercent = 7
                     }
                 },
+
                 new CombatEvent.StatusEffect {
                     Category = StatusCategory.Beneficial,
                     Id = 2613,
@@ -729,6 +785,7 @@ internal static class DummyData {
                     Description = "A magicked barrier is nullifying damage.",
                     Snapshot = new CombatEvent.EventSnapshot { Time = DateTime.Parse("2022-09-30T18:10:33.4031393+02:00"), CurrentHp = 20063, MaxHp = 64167 }
                 },
+
                 new CombatEvent.StatusEffect {
                     Category = StatusCategory.Beneficial,
                     Id = 2643,
@@ -741,22 +798,24 @@ internal static class DummyData {
                         "Stacks are consumed to restore the Panhaima barrier each time it is absorbed. Grants a healing effect when duration expires, its potency based on the number of remaining stacks.",
                     Snapshot = new CombatEvent.EventSnapshot { Time = DateTime.Parse("2022-09-30T18:10:33.4031492+02:00"), CurrentHp = 20063, MaxHp = 64167 }
                 },
+
                 new CombatEvent.DoT {
                     Amount = 20640,
                     Snapshot = new CombatEvent.EventSnapshot { Time = DateTime.Parse("2022-09-30T18:10:34.9313721+02:00"), CurrentHp = 0, MaxHp = 64167 }
                 },
+
                 new CombatEvent.HoT {
                     Amount = 2469,
                     Snapshot = new CombatEvent.EventSnapshot { Time = DateTime.Parse("2022-09-30T18:10:34.9313779+02:00"), CurrentHp = 0, MaxHp = 64167 }
                 }
-            }
+            ]
         });
         plugin.DeathsPerPlayer.AddEntry(0u,
             new Death {
                 PlayerId = 0,
                 PlayerName = "Testing",
                 TimeOfDeath = DateTime.Parse("2022-09-29T19:55:43.9918+02:00"),
-                Events = new List<CombatEvent> {
+                Events = [
                     new CombatEvent.StatusEffect {
                         Category = StatusCategory.Beneficial,
                         Id = 297,
@@ -771,6 +830,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:54:41.4765639+02:00"), CurrentHp = 56605, MaxHp = 61202, BarrierPercent = 41
                             }
                     },
+
                     new CombatEvent.HoT {
                         Amount = 3086,
                         Snapshot =
@@ -778,6 +838,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:54:41.5876295+02:00"), CurrentHp = 56605, MaxHp = 61202, BarrierPercent = 41
                             }
                     },
+
                     new CombatEvent.HoT {
                         Amount = 2986,
                         Snapshot =
@@ -785,6 +846,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:54:42.2198938+02:00"), CurrentHp = 59691, MaxHp = 61202, BarrierPercent = 41
                             }
                     },
+
                     new CombatEvent.HoT {
                         Amount = 0,
                         Snapshot =
@@ -792,6 +854,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:54:42.2199431+02:00"), CurrentHp = 59691, MaxHp = 61202, BarrierPercent = 41
                             }
                     },
+
                     new CombatEvent.HoT {
                         Amount = 6009,
                         Snapshot =
@@ -799,6 +862,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:54:42.2199472+02:00"), CurrentHp = 59691, MaxHp = 61202, BarrierPercent = 41
                             }
                     },
+
                     new CombatEvent.HoT {
                         Amount = 4950,
                         Snapshot =
@@ -806,6 +870,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:54:44.5526758+02:00"), CurrentHp = 61202, MaxHp = 61202, BarrierPercent = 19
                             }
                     },
+
                     new CombatEvent.HoT {
                         Amount = 1933,
                         Snapshot =
@@ -813,6 +878,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:54:45.2197323+02:00"), CurrentHp = 61202, MaxHp = 61202, BarrierPercent = 19
                             }
                     },
+
                     new CombatEvent.HoT {
                         Amount = 3190,
                         Snapshot =
@@ -820,6 +886,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:54:47.6016013+02:00"), CurrentHp = 61202, MaxHp = 61202, BarrierPercent = 19
                             }
                     },
+
                     new CombatEvent.HoT {
                         Amount = 2898,
                         Snapshot =
@@ -827,6 +894,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:54:50.5530659+02:00"), CurrentHp = 61202, MaxHp = 61202, BarrierPercent = 19
                             }
                     },
+
                     new CombatEvent.HoT {
                         Amount = 2928,
                         Snapshot =
@@ -834,6 +902,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:54:53.5877742+02:00"), CurrentHp = 61202, MaxHp = 61202, BarrierPercent = 19
                             }
                     },
+
                     new CombatEvent.HoT {
                         Amount = 2809,
                         Snapshot =
@@ -841,6 +910,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:54:56.5600275+02:00"), CurrentHp = 61202, MaxHp = 61202, BarrierPercent = 19
                             }
                     },
+
                     new CombatEvent.Healed {
                         Source = "White Mage",
                         Amount = 10861,
@@ -863,6 +933,7 @@ internal static class DummyData {
                                 BarrierPercent = 19
                             }
                     },
+
                     new CombatEvent.StatusEffect {
                         Category = StatusCategory.Beneficial,
                         Id = 150,
@@ -877,6 +948,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:54:58.8863873+02:00"), CurrentHp = 61202, MaxHp = 61202, BarrierPercent = 19
                             }
                     },
+
                     new CombatEvent.HoT {
                         Amount = 4181,
                         Snapshot =
@@ -884,6 +956,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:55:00.1998629+02:00"), CurrentHp = 61202, MaxHp = 61202, BarrierPercent = 19
                             }
                     },
+
                     new CombatEvent.Healed {
                         Source = "White Mage",
                         Amount = 6509,
@@ -905,6 +978,7 @@ internal static class DummyData {
                                 BarrierPercent = 19
                             }
                     },
+
                     new CombatEvent.HoT {
                         Amount = 6926,
                         Snapshot =
@@ -912,6 +986,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:55:03.2550274+02:00"), CurrentHp = 61202, MaxHp = 61202, BarrierPercent = 19
                             }
                     },
+
                     new CombatEvent.StatusEffect {
                         Category = StatusCategory.Beneficial,
                         Id = 150,
@@ -926,6 +1001,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:55:03.9976567+02:00"), CurrentHp = 61202, MaxHp = 61202, BarrierPercent = 19
                             }
                     },
+
                     new CombatEvent.HoT {
                         Amount = 5943,
                         Snapshot =
@@ -933,6 +1009,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:55:06.1990313+02:00"), CurrentHp = 61202, MaxHp = 61202, BarrierPercent = 19
                             }
                     },
+
                     new CombatEvent.HoT {
                         Amount = 3838,
                         Snapshot =
@@ -940,6 +1017,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:55:09.2762546+02:00"), CurrentHp = 61202, MaxHp = 61202, BarrierPercent = 19
                             }
                     },
+
                     new CombatEvent.Healed {
                         Source = "Scholar",
                         Amount = 7643,
@@ -961,6 +1039,7 @@ internal static class DummyData {
                                 BarrierPercent = 0
                             }
                     },
+
                     new CombatEvent.HoT {
                         Amount = 4021,
                         Snapshot =
@@ -968,6 +1047,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:55:12.2269096+02:00"), CurrentHp = 61202, MaxHp = 61202, BarrierPercent = 19
                             }
                     },
+
                     new CombatEvent.StatusEffect {
                         Category = StatusCategory.Beneficial,
                         Id = 297,
@@ -982,6 +1062,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:55:12.7409602+02:00"), CurrentHp = 61202, MaxHp = 61202, BarrierPercent = 19
                             }
                     },
+
                     new CombatEvent.HoT {
                         Amount = 3909,
                         Snapshot =
@@ -989,6 +1070,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:55:15.1716393+02:00"), CurrentHp = 61202, MaxHp = 61202, BarrierPercent = 19
                             }
                     },
+
                     new CombatEvent.HoT {
                         Amount = 6532,
                         Snapshot =
@@ -996,6 +1078,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:55:18.2031049+02:00"), CurrentHp = 61202, MaxHp = 61202, BarrierPercent = 19
                             }
                     },
+
                     new CombatEvent.Healed {
                         Source = "Scholar",
                         Amount = 7578,
@@ -1017,6 +1100,7 @@ internal static class DummyData {
                                 BarrierPercent = 19
                             }
                     },
+
                     new CombatEvent.StatusEffect {
                         Category = StatusCategory.Beneficial,
                         Id = 315,
@@ -1031,6 +1115,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:55:21.8871376+02:00"), CurrentHp = 61202, MaxHp = 61202, BarrierPercent = 19
                             }
                     },
+
                     new CombatEvent.DamageTaken {
                         Source = "Hephaistos",
                         Amount = 45020,
@@ -1056,6 +1141,7 @@ internal static class DummyData {
                                 BarrierPercent = 19
                             }
                     },
+
                     new CombatEvent.StatusEffect {
                         Category = StatusCategory.Beneficial,
                         Id = 1219,
@@ -1070,6 +1156,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:55:22.678862+02:00"), CurrentHp = 61202, MaxHp = 61202, BarrierPercent = 19
                             }
                     },
+
                     new CombatEvent.StatusEffect {
                         Category = StatusCategory.Detrimental,
                         Id = 2941,
@@ -1084,6 +1171,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:55:22.7416297+02:00"), CurrentHp = 16182, MaxHp = 61202, BarrierPercent = 0
                             }
                     },
+
                     new CombatEvent.Healed {
                         Source = "White Mage",
                         Amount = 16316,
@@ -1107,6 +1195,7 @@ internal static class DummyData {
                                 BarrierPercent = 0
                             }
                     },
+
                     new CombatEvent.Healed {
                         Source = "Scholar",
                         Amount = 4969,
@@ -1130,6 +1219,7 @@ internal static class DummyData {
                                 BarrierPercent = 0
                             }
                     },
+
                     new CombatEvent.Healed {
                         Source = "White Mage",
                         Amount = 10274,
@@ -1154,6 +1244,7 @@ internal static class DummyData {
                                 BarrierPercent = 12
                             }
                     },
+
                     new CombatEvent.HoT {
                         Amount = 5066,
                         Snapshot =
@@ -1161,6 +1252,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:55:23.9914224+02:00"), CurrentHp = 16182, MaxHp = 61202, BarrierPercent = 12
                             }
                     },
+
                     new CombatEvent.HoT {
                         Amount = 2766,
                         Snapshot =
@@ -1168,6 +1260,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:55:24.2070599+02:00"), CurrentHp = 37564, MaxHp = 61202, BarrierPercent = 12
                             }
                     },
+
                     new CombatEvent.Healed {
                         Source = "Scholar",
                         Amount = 15646,
@@ -1191,6 +1284,7 @@ internal static class DummyData {
                                 BarrierPercent = 12
                             }
                     },
+
                     new CombatEvent.StatusEffect {
                         Category = StatusCategory.Beneficial,
                         Id = 297,
@@ -1205,6 +1299,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:55:24.8247652+02:00"), CurrentHp = 45911, MaxHp = 61202, BarrierPercent = 12
                             }
                     },
+
                     new CombatEvent.HoT {
                         Amount = 1872,
                         Snapshot =
@@ -1212,6 +1307,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:55:27.2344709+02:00"), CurrentHp = 61202, MaxHp = 61202, BarrierPercent = 12
                             }
                     },
+
                     new CombatEvent.DamageTaken {
                         Source = "Hephaistos",
                         Amount = 37545,
@@ -1238,6 +1334,7 @@ internal static class DummyData {
                                 BarrierPercent = 12
                             }
                     },
+
                     new CombatEvent.StatusEffect {
                         Category = StatusCategory.Detrimental,
                         Id = 2941,
@@ -1252,6 +1349,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:55:28.7003957+02:00"), CurrentHp = 23657, MaxHp = 61202, BarrierPercent = 0
                             }
                     },
+
                     new CombatEvent.Healed {
                         Source = "White Mage",
                         Amount = 10286,
@@ -1274,6 +1372,7 @@ internal static class DummyData {
                                 BarrierPercent = 0
                             }
                     },
+
                     new CombatEvent.HoT {
                         Amount = 3022,
                         Snapshot =
@@ -1281,6 +1380,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:55:30.1860675+02:00"), CurrentHp = 23657, MaxHp = 61202, BarrierPercent = 0
                             }
                     },
+
                     new CombatEvent.HoT {
                         Amount = 5018,
                         Snapshot =
@@ -1288,6 +1388,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:55:31.3667374+02:00"), CurrentHp = 27291, MaxHp = 61202, BarrierPercent = 0
                             }
                     },
+
                     new CombatEvent.Healed {
                         Source = "Warrior",
                         Amount = 5648,
@@ -1310,6 +1411,7 @@ internal static class DummyData {
                                 BarrierPercent = 0
                             }
                     },
+
                     new CombatEvent.StatusEffect {
                         Category = StatusCategory.Beneficial,
                         Id = 1457,
@@ -1324,6 +1426,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:55:32.9776557+02:00"), CurrentHp = 48243, MaxHp = 61202, BarrierPercent = 14
                             }
                     },
+
                     new CombatEvent.HoT {
                         Amount = 1826,
                         Snapshot =
@@ -1331,6 +1434,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:55:33.234978+02:00"), CurrentHp = 48243, MaxHp = 61202, BarrierPercent = 14
                             }
                     },
+
                     new CombatEvent.Healed {
                         Source = "Scholar",
                         Amount = 4868,
@@ -1353,6 +1457,7 @@ internal static class DummyData {
                                 BarrierPercent = 14
                             }
                     },
+
                     new CombatEvent.StatusEffect {
                         Category = StatusCategory.Beneficial,
                         Id = 297,
@@ -1367,6 +1472,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:55:34.4577388+02:00"), CurrentHp = 55549, MaxHp = 61202, BarrierPercent = 27
                             }
                     },
+
                     new CombatEvent.Healed {
                         Source = "Seraph",
                         Amount = 5585,
@@ -1390,6 +1496,7 @@ internal static class DummyData {
                                 BarrierPercent = 27
                             }
                     },
+
                     new CombatEvent.Healed {
                         Source = "White Mage",
                         Amount = 10244,
@@ -1414,6 +1521,7 @@ internal static class DummyData {
                                 BarrierPercent = 36
                             }
                     },
+
                     new CombatEvent.HoT {
                         Amount = 1839,
                         Snapshot =
@@ -1421,6 +1529,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:55:36.1932848+02:00"), CurrentHp = 55549, MaxHp = 61202, BarrierPercent = 36
                             }
                     },
+
                     new CombatEvent.StatusEffect {
                         Category = StatusCategory.Beneficial,
                         Id = 1917,
@@ -1435,6 +1544,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:55:36.3739846+02:00"), CurrentHp = 61202, MaxHp = 61202, BarrierPercent = 36
                             }
                     },
+
                     new CombatEvent.HoT {
                         Amount = 1723,
                         Snapshot =
@@ -1442,6 +1552,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:55:39.2069314+02:00"), CurrentHp = 61202, MaxHp = 61202, BarrierPercent = 36
                             }
                     },
+
                     new CombatEvent.StatusEffect {
                         Category = StatusCategory.Beneficial,
                         Id = 1204,
@@ -1456,6 +1567,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:55:39.4847986+02:00"), CurrentHp = 61202, MaxHp = 61202, BarrierPercent = 36
                             }
                     },
+
                     new CombatEvent.DamageTaken {
                         Source = "Hephaistos",
                         Amount = 35697,
@@ -1484,12 +1596,13 @@ internal static class DummyData {
                                 BarrierPercent = 36
                             }
                     },
+
                     new CombatEvent.DamageTaken {
                         Source = "Hephaistos",
                         Amount = 9999999,
                         Action = "Forcible Failure",
                         DirectHit = true,
-                        DamageType = (DamageType)0,
+                        DamageType = 0,
                         DisplayType = (ActionEffectDisplayType)1,
                         Icon = 405,
                         Snapshot =
@@ -1513,12 +1626,13 @@ internal static class DummyData {
                                 BarrierPercent = 36
                             }
                     },
+
                     new CombatEvent.DamageTaken {
                         Source = "Hephaistos",
                         Amount = 9999999,
                         Action = "Forcible Failure",
                         DirectHit = true,
-                        DamageType = (DamageType)0,
+                        DamageType = 0,
                         DisplayType = (ActionEffectDisplayType)1,
                         Icon = 405,
                         Snapshot =
@@ -1542,6 +1656,7 @@ internal static class DummyData {
                                 BarrierPercent = 36
                             }
                     },
+
                     new CombatEvent.StatusEffect {
                         Category = StatusCategory.Detrimental,
                         Id = 2941,
@@ -1556,6 +1671,7 @@ internal static class DummyData {
                                 Time = DateTime.Parse("2022-09-29T19:55:41.5219014+02:00"), CurrentHp = 25505, MaxHp = 61202, BarrierPercent = 0
                             }
                     },
+
                     new CombatEvent.Healed {
                         Source = "Seraph",
                         Amount = 5475,
@@ -1579,6 +1695,7 @@ internal static class DummyData {
                                 BarrierPercent = 0
                             }
                     },
+
                     new CombatEvent.Healed {
                         Source = "Liturgic Bell",
                         Amount = 9553,
@@ -1600,7 +1717,7 @@ internal static class DummyData {
                             BarrierPercent = 0
                         }
                     }
-                }
+                ]
             });
 
         plugin.NotificationHandler.DisplayDeath(plugin.DeathsPerPlayer[0][0]);

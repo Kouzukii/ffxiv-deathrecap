@@ -7,7 +7,6 @@ using Dalamud.Interface.Components;
 using Dalamud.Interface.Internal;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
-using Dalamud.Plugin.Services;
 using DeathRecap.Events;
 using DeathRecap.Game;
 using ImGuiNET;
@@ -31,8 +30,6 @@ public class DeathRecapWindow : Window {
 
     private readonly DeathRecapPlugin plugin;
 
-    private readonly Dictionary<uint, IDalamudTextureWrap> textures = new();
-
     private bool hasShownTip;
 
     public DeathRecapWindow(DeathRecapPlugin plugin) : base("Death Recap") {
@@ -42,7 +39,7 @@ public class DeathRecapWindow : Window {
         Size = new Vector2(800, 350);
     }
 
-    public uint SelectedPlayer { get; internal set; }
+    public ulong SelectedPlayer { get; internal set; }
 
     public int SelectedDeath { get; internal set; }
 
@@ -180,7 +177,7 @@ public class DeathRecapWindow : Window {
     }
 
     private void DrawPlayerSelection(string? selectedPlayerName) {
-        void DrawItem(IEnumerable<Death> pdeaths, uint id) {
+        void DrawItem(IEnumerable<Death> pdeaths, ulong id) {
             if (pdeaths.FirstOrDefault()?.PlayerName is not { } name)
                 return;
             if (ImGui.Selectable(name, id == SelectedPlayer))
@@ -192,7 +189,7 @@ public class DeathRecapWindow : Window {
         ImGui.SameLine();
         ImGui.SetNextItemWidth(200 * ImGuiHelpers.GlobalScale);
         if (ImGui.BeginCombo("", selectedPlayerName)) {
-            var processed = new HashSet<uint>();
+            var processed = new HashSet<ulong>();
 
             if (Service.PartyList.Length > 0) {
                 foreach (var pmem in Service.PartyList) {
@@ -202,7 +199,7 @@ public class DeathRecapWindow : Window {
                     DrawItem(pdeaths, id);
                     processed.Add(id);
                 }
-            } else if (Service.ObjectTable[0]?.ObjectId is { } localPlayerId && plugin.DeathsPerPlayer.TryGetValue(localPlayerId, out var pdeaths)) {
+            } else if (Service.ObjectTable[0]?.GameObjectId is { } localPlayerId && plugin.DeathsPerPlayer.TryGetValue(localPlayerId, out var pdeaths)) {
                 DrawItem(pdeaths, localPlayerId);
                 processed.Add(localPlayerId);
             }
@@ -748,10 +745,7 @@ public class DeathRecapWindow : Window {
         if (icon is { } idx) {
             if (stackCount > 1)
                 idx += stackCount - 1;
-            if (textures.TryGetValue(idx, out var tex))
-                return tex;
-            if (Service.TextureProvider.GetIcon(idx, ITextureProvider.IconFlags.None) is { } t)
-                return textures[idx] = t;
+            return Service.TextureProvider.GetFromGameIcon(idx).GetWrapOrDefault();
         }
 
         return null;

@@ -24,7 +24,7 @@ public class DeathRecapPlugin : IDalamudPlugin {
 
     public WindowSystem WindowSystem { get; }
 
-    public Dictionary<uint, List<Death>> DeathsPerPlayer { get; } = new();
+    public Dictionary<ulong, List<Death>> DeathsPerPlayer { get; } = new();
 
     private DateTime lastClean = DateTime.Now;
 

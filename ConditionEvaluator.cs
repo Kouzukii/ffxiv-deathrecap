@@ -16,7 +16,7 @@ public class ConditionEvaluator(DeathRecapPlugin plugin) {
         if (plugin.Configuration.Others.Capture)
             return true;
 
-        if (plugin.Configuration.Self.Capture && actorId == Service.ObjectTable[0]?.ObjectId)
+        if (plugin.Configuration.Self.Capture && actorId == Service.ObjectTable[0]?.GameObjectId)
             return true;
 
         if (plugin.Configuration.Party.Capture && LookupPartyMember(actorId))
@@ -26,7 +26,7 @@ public class ConditionEvaluator(DeathRecapPlugin plugin) {
     }
 
     public NotificationStyle GetNotificationType(uint actorId) {
-        if (actorId == Service.ObjectTable[0]?.ObjectId) {
+        if (actorId == Service.ObjectTable[0]?.GameObjectId) {
             if (plugin.Configuration.Self.OnlyInstances && !Service.Condition[ConditionFlag.BoundByDuty])
                 return NotificationStyle.None;
 
