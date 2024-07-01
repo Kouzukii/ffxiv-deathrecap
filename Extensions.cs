@@ -17,15 +17,15 @@ public static class Extensions {
         return str.Payloads.Aggregate("", (a, p) => p is TextPayload ? a + p.RawString : a);
     }
 
-    public static unsafe byte Barrier(this PlayerCharacter player) {
+    public static unsafe byte Barrier(this IPlayerCharacter player) {
         return ((Character*)player.Address)->CharacterData.ShieldValue;
     }
 
     public static CombatEvent.EventSnapshot Snapshot(
-        this PlayerCharacter player, bool snapEffects = false,
+        this IPlayerCharacter player, bool snapEffects = false,
         IReadOnlyCollection<uint>? additionalStatus = null) {
         var statusEffects = snapEffects
-            ? player.StatusList.Select(s => new CombatEvent.StatusEffectSnapshot { Id = s.StatusId, StackCount = s.StatusId is 48 or 49 ? 0u : s.Param })
+            ? player.StatusList.Select(s => new CombatEvent.StatusEffectSnapshot { Id = s.StatusId, StackCount = s.Param })
                 .ToList()
             : null;
         if (additionalStatus != null)

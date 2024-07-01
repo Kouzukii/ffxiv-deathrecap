@@ -4,7 +4,7 @@ using System.Linq;
 using System.Numerics;
 using Dalamud.Interface;
 using Dalamud.Interface.Components;
-using Dalamud.Interface.Internal;
+using Dalamud.Interface.Textures.TextureWraps;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
 using DeathRecap.Events;
@@ -664,7 +664,7 @@ public class DeathRecapWindow : Window {
                 foreach (var s in group) {
                     if (s.Status!.IsFcBuff)
                         continue;
-                    if (GetIconImage(s.Status!.Icon, s.StackCount) is { } img) {
+                    if (GetIconImage(s.Status!.Icon, s.StackCount <= s.Status.MaxStacks ? s.StackCount : 0) is { } img) {
                         InlineIcon(img);
                         if (ImGui.IsItemHovered()) {
                             ImGui.BeginTooltip();
@@ -741,13 +741,13 @@ public class DeathRecapWindow : Window {
         ImGuiHelper.TextColored(ColorGrey, $"{(e.Snapshot.Time - deathTime).TotalSeconds:N1}s");
     }
 
-    private IDalamudTextureWrap? GetIconImage(uint? icon, uint stackCount = 0) {
-        if (icon is { } idx) {
-            if (stackCount > 1)
-                idx += stackCount - 1;
-            return Service.TextureProvider.GetFromGameIcon(idx).GetWrapOrDefault();
-        }
-
-        return null;
+    private static IDalamudTextureWrap? GetIconImage(uint? icon, uint stackCount = 0) {
+        if (icon is not { } idx)
+            return null;
+        if (stackCount > 1)
+            idx += stackCount - 1;
+        return Service.TextureProvider.TryGetIconPath(idx, out var path)
+            ? Service.TextureProvider.GetFromGame(path).GetWrapOrDefault()
+            : null;
     }
 }

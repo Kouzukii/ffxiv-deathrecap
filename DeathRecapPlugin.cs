@@ -28,7 +28,7 @@ public class DeathRecapPlugin : IDalamudPlugin {
 
     private DateTime lastClean = DateTime.Now;
 
-    public DeathRecapPlugin(DalamudPluginInterface pluginInterface) {
+    public DeathRecapPlugin(IDalamudPluginInterface pluginInterface) {
         Service.Initialize(pluginInterface);
 
         Configuration = Configuration.Get(pluginInterface);

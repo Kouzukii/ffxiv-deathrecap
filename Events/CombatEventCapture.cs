@@ -59,14 +59,14 @@ public class CombatEventCapture : IDisposable {
             };
             Action? action = null;
             string? source = null;
-            GameObject? gameObject = null;
+            IGameObject? gameObject = null;
             List<uint>? additionalStatus = null;
 
             for (var i = 0; i < targets; i++) {
                 var actionTargetId = (uint)(effectTrail[i] & uint.MaxValue);
                 if (!plugin.ConditionEvaluator.ShouldCapture(actionTargetId))
                     continue;
-                if (Service.ObjectTable.SearchById(actionTargetId) is not PlayerCharacter p)
+                if (Service.ObjectTable.SearchById(actionTargetId) is not IPlayerCharacter p)
                     continue;
                 for (var j = 0; j < 8; j++) {
                     ref var actionEffect = ref effectArray[i * 8 + j];
@@ -96,7 +96,7 @@ public class CombatEventCapture : IDisposable {
                                     // 3642 = Candy Cane, BLU Candy Cane
                                     Snapshot =
                                         p.Snapshot(true,
-                                            additionalStatus ??= gameObject is BattleChara b
+                                            additionalStatus ??= gameObject is IBattleChara b
                                                 ? b.StatusList.Select(s => s.StatusId).Where(s => s is 1203 or 1195 or 1193 or 860 or 1715 or 2115 or 3642)
                                                     .ToList()
                                                 : []),
@@ -139,7 +139,7 @@ public class CombatEventCapture : IDisposable {
             if (!plugin.ConditionEvaluator.ShouldCapture(entityId))
                 return;
 
-            if (Service.ObjectTable.SearchById(entityId) is not PlayerCharacter p)
+            if (Service.ObjectTable.SearchById(entityId) is not IPlayerCharacter p)
                 return;
 
             switch ((ActorControlCategory)type) {
@@ -187,7 +187,7 @@ public class CombatEventCapture : IDisposable {
             if (!plugin.ConditionEvaluator.ShouldCapture(targetId))
                 return;
 
-            if (Service.ObjectTable.SearchById(targetId) is not PlayerCharacter p)
+            if (Service.ObjectTable.SearchById(targetId) is not IPlayerCharacter p)
                 return;
 
             var effects = (StatusEffectAddEntry*)message->Effects;
@@ -207,7 +207,7 @@ public class CombatEventCapture : IDisposable {
                     new CombatEvent.StatusEffect {
                         Snapshot = p.Snapshot(),
                         Id = effectId,
-                        StackCount = effect.StackCount < status?.MaxStacks ? effect.StackCount : 0u,
+                        StackCount = effect.StackCount <= status?.MaxStacks ? effect.StackCount : 0u,
                         Icon = status?.Icon,
                         Status = status?.Name.RawString.Demangle(),
                         Description = status?.Description.DisplayedText().Demangle(),

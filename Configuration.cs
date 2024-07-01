@@ -11,7 +11,8 @@ namespace DeathRecap;
 
 [Serializable]
 public class Configuration : IPluginConfiguration {
-    [NonSerialized] private DalamudPluginInterface pluginInterface = null!;
+    [NonSerialized]
+    private IDalamudPluginInterface pluginInterface = null!;
 
     public CaptureConfig Self { get; set; } =
         new() { Capture = true, NotificationStyle = NotificationStyle.Popup, OnlyInstances = false, DisableInPvp = false };
@@ -30,9 +31,10 @@ public class Configuration : IPluginConfiguration {
     public bool ShowCombatHistogram { get; set; } = false;
     public int Version { get; set; } = 2;
 
-    [JsonExtensionData] public IDictionary<string, JToken> AdditionalData { get; set; } = new Dictionary<string, JToken>();
+    [JsonExtensionData]
+    public IDictionary<string, JToken> AdditionalData { get; set; } = new Dictionary<string, JToken>();
 
-    public static Configuration Get(DalamudPluginInterface pluginInterface) {
+    public static Configuration Get(IDalamudPluginInterface pluginInterface) {
         var config = pluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
         config.pluginInterface = pluginInterface;
         config.Migrate();
