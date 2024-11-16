@@ -535,7 +535,7 @@ public class DeathRecapWindow : Window {
                     ImGui.TextUnformatted("Status Effects");
                     var printSeparator = false;
                     foreach (var category in statusEffects.Select(s => (Status: statusSheet.GetRow(s.Id), s.StackCount))
-                                 .Where(s => s.Status.RowId is 0)
+                                 .Where(s => s.Status.RowId is not 0)
                                  .Reverse()
                                  .GroupBy(s => s.Status!.ReadUInt8Column(6))
                                  .OrderByDescending(s => s.Key)) {
@@ -649,7 +649,7 @@ public class DeathRecapWindow : Window {
             ImGui.TableNextColumn();
             var printSeparator = false;
             foreach (var group in statusEffects.Select(s => (Status: sheet.GetRow(s.Id), s.StackCount))
-                         .Where(s => s.Status.RowId is 0)
+                         .Where(s => s.Status.RowId is not 0)
                          .Reverse()
                          .GroupBy(s => s.Status!.ReadUInt8Column(6))
                          .OrderByDescending(s => s.Key)) {
@@ -665,7 +665,7 @@ public class DeathRecapWindow : Window {
                 foreach (var s in group) {
                     if (s.Status!.ReadBoolColumn(26))
                         continue;
-                    if (GetIconImage(s.Status!.ReadUInt32Column(6), s.StackCount <= s.Status.ReadUInt8Column(4) ? s.StackCount : 0) is { } img) {
+                    if (GetIconImage(s.Status!.ReadUInt32Column(2), s.StackCount <= s.Status.ReadUInt8Column(4) ? s.StackCount : 0) is { } img) {
                         InlineIcon(img);
                         if (ImGui.IsItemHovered()) {
                             ImGui.BeginTooltip();
