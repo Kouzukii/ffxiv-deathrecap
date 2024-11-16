@@ -10,7 +10,7 @@ using Dalamud.Interface.Windowing;
 using DeathRecap.Events;
 using DeathRecap.Game;
 using ImGuiNET;
-using Lumina.Excel.GeneratedSheets;
+using Lumina.Excel.Sheets;
 using Newtonsoft.Json;
 
 namespace DeathRecap.UI;
@@ -530,13 +530,13 @@ public class DeathRecapWindow : Window {
                 ImGui.TextUnformatted(
                     $"HP: {eCur.Snapshot.CurrentHp:N0} ({(float)eCur.Snapshot.CurrentHp / eCur.Snapshot.MaxHp:P1}) → {eCur.Snapshot.CurrentHp + change:N0} ({(float)(eCur.Snapshot.CurrentHp + change) / eCur.Snapshot.MaxHp:P1})");
 
-                if (eCur.Snapshot.StatusEffects is { Count: > 0 } statusEffects && Service.DataManager.GetExcelSheet<Status>() is { } statusSheet) {
+                if (eCur.Snapshot.StatusEffects is { Count: > 0 } statusEffects) {
                     ImGui.TextUnformatted("Status Effects");
                     var printSeparator = false;
+                    var statusSheet = Service.DataManager.GetExcelSheet<Status>();
                     foreach (var category in statusEffects.Select(s => (Status: statusSheet.GetRow(s.Id), s.StackCount))
-                                 .Where(s => s.Status != null)
                                  .Reverse()
-                                 .GroupBy(s => s.Status!.StatusCategory)
+                                 .GroupBy(s => s.Status.StatusCategory)
                                  .OrderByDescending(s => s.Key)) {
                         if (category.Key == 0)
                             continue;
@@ -547,7 +547,7 @@ public class DeathRecapWindow : Window {
                             printSeparator = true;
 
                         foreach (var s in category) {
-                            if (GetIconImage(s.Status!.Icon, s.StackCount) is { } img) {
+                            if (GetIconImage(s.Status.Icon, s.StackCount) is { } img) {
                                 InlineIcon(img, 2);
                             }
                         }
@@ -644,13 +644,13 @@ public class DeathRecapWindow : Window {
     }
 
     private void DrawStatusEffectsColumn(CombatEvent e) {
-        if (e.Snapshot.StatusEffects is { } statusEffects && Service.DataManager.GetExcelSheet<Status>() is { } sheet) {
+        if (e.Snapshot.StatusEffects is { } statusEffects) {
             ImGui.TableNextColumn();
             var printSeparator = false;
+            var sheet = Service.DataManager.GetExcelSheet<Status>();
             foreach (var group in statusEffects.Select(s => (Status: sheet.GetRow(s.Id), s.StackCount))
-                         .Where(s => s.Status != null)
                          .Reverse()
-                         .GroupBy(s => s.Status!.StatusCategory)
+                         .GroupBy(s => s.Status.StatusCategory)
                          .OrderByDescending(s => s.Key)) {
                 if (group.Key == 0)
                     continue;
@@ -662,14 +662,14 @@ public class DeathRecapWindow : Window {
                     printSeparator = true;
 
                 foreach (var s in group) {
-                    if (s.Status!.IsFcBuff)
+                    if (s.Status.IsFcBuff)
                         continue;
-                    if (GetIconImage(s.Status!.Icon, s.StackCount <= s.Status.MaxStacks ? s.StackCount : 0) is { } img) {
+                    if (GetIconImage(s.Status.Icon, s.StackCount <= s.Status.MaxStacks ? s.StackCount : 0) is { } img) {
                         InlineIcon(img);
                         if (ImGui.IsItemHovered()) {
                             ImGui.BeginTooltip();
-                            ImGui.TextUnformatted(s.Status!.Name.RawString.Demangle());
-                            ImGui.TextUnformatted(s.Status!.Description.DisplayedText().Demangle());
+                            ImGui.TextUnformatted(s.Status.Name.ExtractText());
+                            ImGui.TextUnformatted(s.Status.Description.ExtractText());
                             ImGui.EndTooltip();
                         }
                     }

@@ -6,8 +6,8 @@ using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Hooking;
 using Dalamud.Utility.Signatures;
 using DeathRecap.Game;
-using Lumina.Excel.GeneratedSheets;
-using Action = Lumina.Excel.GeneratedSheets.Action;
+using Lumina.Excel.Sheets;
+using Action = Lumina.Excel.Sheets.Action;
 
 namespace DeathRecap.Events;
 
@@ -76,7 +76,7 @@ public class CombatEventCapture : IDisposable {
                     if ((actionEffect.Flags2 & 0x40) == 0x40)
                         amount += (uint)actionEffect.Flags1 << 16;
 
-                    action ??= Service.DataManager.Excel.GetSheet<Action>()?.GetRow(actionId);
+                    action ??= Service.DataManager.GetExcelSheet<Action>().GetRowOrDefault(actionId);
                     gameObject ??= Service.ObjectTable.SearchById((uint)sourceId);
                     source ??= gameObject?.Name.TextValue;
 
@@ -102,7 +102,7 @@ public class CombatEventCapture : IDisposable {
                                                 : []),
                                     Source = source,
                                     Amount = amount,
-                                    Action = action?.ActionCategory.Row == 1 ? "Auto-attack" : action?.Name?.RawString?.Demangle() ?? "",
+                                    Action = action?.ActionCategory.RowId == 1 ? "Auto-attack" : action?.Name.ExtractText() ?? "",
                                     Icon = action?.Icon,
                                     Crit = (actionEffect.Param0 & 0x20) == 0x20,
                                     DirectHit = (actionEffect.Param0 & 0x40) == 0x40,
@@ -118,7 +118,7 @@ public class CombatEventCapture : IDisposable {
                                     Snapshot = p.Snapshot(true),
                                     Source = source,
                                     Amount = amount,
-                                    Action = action?.Name?.RawString?.Demangle() ?? "",
+                                    Action = action?.Name.ExtractText() ?? "",
                                     Icon = action?.Icon,
                                     Crit = (actionEffect.Param1 & 0x20) == 0x20
                                 });
@@ -149,13 +149,13 @@ public class CombatEventCapture : IDisposable {
                 case ActorControlCategory.HoT:
                     if (statusId != 0) {
                         var sourceName = Service.ObjectTable.SearchById(entityId)?.Name.TextValue;
-                        var status = Service.DataManager.GetExcelSheet<Status>()?.GetRow(statusId);
+                        var status = Service.DataManager.GetExcelSheet<Status>().GetRowOrDefault(statusId);
                         combatEvents.AddEntry(entityId,
                             new CombatEvent.Healed {
                                 Snapshot = p.Snapshot(),
                                 Source = sourceName,
                                 Amount = amount,
-                                Action = status?.Name.RawString.Demangle() ?? "",
+                                Action = status?.Name.ExtractText() ?? "",
                                 Icon = status?.Icon,
                                 Crit = source == 1
                             });
@@ -201,7 +201,7 @@ public class CombatEventCapture : IDisposable {
                 if (effect.Duration < 0)
                     continue;
                 var source = Service.ObjectTable.SearchById(effect.SourceActorId)?.Name.TextValue;
-                var status = Service.DataManager.Excel.GetSheet<Status>()?.GetRow(effectId);
+                var status = Service.DataManager.GetExcelSheet<Status>().GetRowOrDefault(effectId);
 
                 combatEvents.AddEntry(targetId,
                     new CombatEvent.StatusEffect {
@@ -209,8 +209,8 @@ public class CombatEventCapture : IDisposable {
                         Id = effectId,
                         StackCount = effect.StackCount <= status?.MaxStacks ? effect.StackCount : 0u,
                         Icon = status?.Icon,
-                        Status = status?.Name.RawString.Demangle(),
-                        Description = status?.Description.DisplayedText().Demangle(),
+                        Status = status?.Name.ExtractText(),
+                        Description = status?.Description.ExtractText(),
                         Category = (StatusCategory)(status?.StatusCategory ?? 0),
                         Source = source,
                         Duration = effect.Duration

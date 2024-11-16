@@ -1,12 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using DeathRecap.Events;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
-using FFXIVClientStructs.FFXIV.Client.LayoutEngine;
-using FFXIVClientStructs.FFXIV.Client.System.String;
 using Lumina.Text;
 using Lumina.Text.Payloads;
 
@@ -48,20 +45,5 @@ public static class Extensions {
             dict.Add(key, objList);
             objList.Add(val);
         }
-    }
-
-    public static string Demangle(this string name) {
-        if (!name.StartsWith("_rsv_"))
-            return name;
-
-        unsafe {
-            var demangled = LayoutWorld.Instance()->RsvMap[0][new Utf8String(name)];
-            if (demangled.Value != null && Marshal.PtrToStringUTF8((IntPtr)demangled.Value) is { } result) {
-                return result;
-            }
-        }
-
-        Service.PluginLog.Warning($"Unknown name {name}");
-        return name;
     }
 }
