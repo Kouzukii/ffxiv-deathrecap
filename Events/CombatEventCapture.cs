@@ -6,8 +6,8 @@ using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Hooking;
 using Dalamud.Utility.Signatures;
 using DeathRecap.Game;
-using Lumina.Excel.GeneratedSheets;
-using Action = Lumina.Excel.GeneratedSheets.Action;
+using Lumina.Excel.Sheets;
+using Lumina.Excel;
 
 namespace DeathRecap.Events;
 
@@ -57,7 +57,7 @@ public class CombatEventCapture : IDisposable {
                 ActionEffectDisplayType.ShowItemName => 0x2000000 + effectHeader->ActionId,
                 _ => effectHeader->ActionAnimationId
             };
-            Action? action = null;
+            Lumina.Excel.RawRow? action = null;
             string? source = null;
             IGameObject? gameObject = null;
             List<uint>? additionalStatus = null;
@@ -76,7 +76,7 @@ public class CombatEventCapture : IDisposable {
                     if ((actionEffect.Flags2 & 0x40) == 0x40)
                         amount += (uint)actionEffect.Flags1 << 16;
 
-                    action ??= Service.DataManager.Excel.GetSheet<Action>()?.GetRow(actionId);
+                    action = Service.DataManager.Excel.GetSheet<RawRow>(name: "Action")?.GetRow(actionId);
                     gameObject ??= Service.ObjectTable.SearchById((uint)sourceId);
                     source ??= gameObject?.Name.TextValue;
 
@@ -102,8 +102,8 @@ public class CombatEventCapture : IDisposable {
                                                 : []),
                                     Source = source,
                                     Amount = amount,
-                                    Action = action?.ActionCategory.Row == 1 ? "Auto-attack" : action?.Name?.RawString?.Demangle() ?? "",
-                                    Icon = action?.Icon,
+                                    Action = action?.ReadInt32Column(3) == 1 ? "Auto-attack" : action?.ReadStringColumn(0).ExtractText() ?? "",
+                                    Icon = action?.ReadUInt16Column(2),
                                     Crit = (actionEffect.Param0 & 0x20) == 0x20,
                                     DirectHit = (actionEffect.Param0 & 0x40) == 0x40,
                                     DamageType = (DamageType)(actionEffect.Param1 & 0xF),
@@ -118,8 +118,8 @@ public class CombatEventCapture : IDisposable {
                                     Snapshot = p.Snapshot(true),
                                     Source = source,
                                     Amount = amount,
-                                    Action = action?.Name?.RawString?.Demangle() ?? "",
-                                    Icon = action?.Icon,
+                                    Action = action?.ReadStringColumn(0).ExtractText() ?? "",
+                                    Icon = action?.ReadUInt16Column(2),
                                     Crit = (actionEffect.Param1 & 0x20) == 0x20
                                 });
                             break;
@@ -149,14 +149,14 @@ public class CombatEventCapture : IDisposable {
                 case ActorControlCategory.HoT:
                     if (statusId != 0) {
                         var sourceName = Service.ObjectTable.SearchById(entityId)?.Name.TextValue;
-                        var status = Service.DataManager.GetExcelSheet<Status>()?.GetRow(statusId);
+                        var status = Service.DataManager.GetExcelSheet<RawRow>(name: "Status")?.GetRow(statusId);
                         combatEvents.AddEntry(entityId,
                             new CombatEvent.Healed {
                                 Snapshot = p.Snapshot(),
                                 Source = sourceName,
                                 Amount = amount,
-                                Action = status?.Name.RawString.Demangle() ?? "",
-                                Icon = status?.Icon,
+                                Action = status?.ReadStringColumn(0).ExtractText() ?? "",
+                                Icon = status?.ReadUInt32Column(2),
                                 Crit = source == 1
                             });
                     } else {
@@ -201,17 +201,17 @@ public class CombatEventCapture : IDisposable {
                 if (effect.Duration < 0)
                     continue;
                 var source = Service.ObjectTable.SearchById(effect.SourceActorId)?.Name.TextValue;
-                var status = Service.DataManager.Excel.GetSheet<Status>()?.GetRow(effectId);
+                var status = Service.DataManager.GetExcelSheet<RawRow>(name: "Status")?.GetRow(effectId);
 
                 combatEvents.AddEntry(targetId,
                     new CombatEvent.StatusEffect {
                         Snapshot = p.Snapshot(),
                         Id = effectId,
-                        StackCount = effect.StackCount <= status?.MaxStacks ? effect.StackCount : 0u,
-                        Icon = status?.Icon,
-                        Status = status?.Name.RawString.Demangle(),
-                        Description = status?.Description.DisplayedText().Demangle(),
-                        Category = (StatusCategory)(status?.StatusCategory ?? 0),
+                        StackCount = effect.StackCount <= status?.ReadUInt8Column(4) ? effect.StackCount : 0u,
+                        Icon = status?.ReadUInt32Column(2),
+                        Status = status?.ReadStringColumn(0).ExtractText(),
+                        Description = status?.ReadStringColumn(1).ExtractText(),
+                        Category = (StatusCategory)(status?.ReadUInt8Column(6) ?? 0),
                         Source = source,
                         Duration = effect.Duration
                     });
