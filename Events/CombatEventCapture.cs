@@ -23,7 +23,7 @@ public class CombatEventCapture : IDisposable {
 
     private delegate void ProcessPacketEffectResultDelegate(uint targetId, IntPtr actionIntegrityData, bool isReplay);
 
-    [Signature("40 55 56 57 41 54 41 55 41 56 48 8D AC 24 68 FF FF FF 48 81 EC 98 01 00 00", DetourName = nameof(ProcessPacketActionEffectDetour))]
+    [Signature("40 55 53 56 41 54 41 55 41 56 41 57 48 8D AC 24 60 FF FF FF 48 81 EC A0 01 00 00", DetourName = nameof(ProcessPacketActionEffectDetour))]
     private readonly Hook<ProcessPacketActionEffectDelegate> processPacketActionEffectHook = null!;
 
     [Signature("E8 ?? ?? ?? ?? 0F B7 0B 83 E9 64", DetourName = nameof(ProcessPacketActorControlDetour))]
@@ -143,9 +143,7 @@ public class CombatEventCapture : IDisposable {
                 return;
 
             switch ((ActorControlCategory)type) {
-                case ActorControlCategory.DoT:
-                    combatEvents.AddEntry(entityId, new CombatEvent.DoT { Snapshot = p.Snapshot(), Amount = amount });
-                    break;
+                case ActorControlCategory.DoT: combatEvents.AddEntry(entityId, new CombatEvent.DoT { Snapshot = p.Snapshot(), Amount = amount }); break;
                 case ActorControlCategory.HoT:
                     if (statusId != 0) {
                         var sourceName = Service.ObjectTable.SearchById(entityId)?.Name.TextValue;
