@@ -24,6 +24,7 @@ public class Configuration : IPluginConfiguration {
         new() { Capture = false, NotificationStyle = NotificationStyle.Chat, OnlyInstances = true, DisableInPvp = true };
 
     public bool ShowTip { get; set; } = true;
+    public bool RecordJobsAsSourceInPvp { get; set; } = false;
     public int KeepCombatEventsForSeconds { get; set; } = 60;
     public int KeepDeathsForMinutes { get; set; } = 60;
     public XivChatType ChatType { get; set; } = XivChatType.SystemMessage;

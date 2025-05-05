@@ -58,7 +58,6 @@ public class CombatEventCapture : IDisposable {
                 _ => effectHeader->ActionAnimationId
             };
             Action? action = null;
-            string? source = null;
             IGameObject? gameObject = null;
             List<uint>? additionalStatus = null;
 
@@ -78,7 +77,7 @@ public class CombatEventCapture : IDisposable {
 
                     action ??= Service.DataManager.GetExcelSheet<Action>().GetRowOrDefault(actionId);
                     gameObject ??= Service.ObjectTable.SearchById((uint)sourceId);
-                    source ??= gameObject?.Name.TextValue;
+                    var source = DamageSourceFromGameObject(gameObject, p);
 
                     switch (actionEffect.EffectType) {
                         case ActionEffectType.Miss:
@@ -198,7 +197,8 @@ public class CombatEventCapture : IDisposable {
                 // negative durations will remove effect
                 if (effect.Duration < 0)
                     continue;
-                var source = Service.ObjectTable.SearchById(effect.SourceActorId)?.Name.TextValue;
+                var gameObject = Service.ObjectTable.SearchById(effect.SourceActorId);
+                var source = DamageSourceFromGameObject(gameObject, p);
                 var status = Service.DataManager.GetExcelSheet<Status>().GetRowOrDefault(effectId);
 
                 combatEvents.AddEntry(targetId,
@@ -217,6 +217,28 @@ public class CombatEventCapture : IDisposable {
         } catch (Exception e) {
             Service.PluginLog.Error(e, "Caught unexpected exception");
         }
+    }
+
+    private string? DamageSourceFromGameObject(IGameObject? sourceGameObject, IPlayerCharacter targetCharacter)
+    {
+        if (sourceGameObject is not IPlayerCharacter sourceCharacter) {
+            return sourceGameObject?.Name.TextValue;
+        }
+     
+        string? source = null;
+        var isPvp = Service.ClientState.IsPvP;
+        var recordJobs = plugin.Configuration.RecordJobsAsSourceInPvp;
+        var isOtherPlayer = sourceCharacter.Name.TextValue != targetCharacter.Name.TextValue;
+        
+        if (recordJobs && isPvp && isOtherPlayer) {
+            source ??= sourceCharacter.ClassJob.Value.Name.ExtractText();
+            // Capitalize the first letter in each word as the strings returned are lowercase
+            source = string.Join(" ", source.Split(' ').Select(word => char.ToUpper(word[0]) + word.Substring(1)));
+        } else {
+            source ??= sourceGameObject?.Name.TextValue;
+        }
+        
+        return source;
     }
 
     public void CleanCombatEvents() {

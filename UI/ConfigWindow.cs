@@ -102,6 +102,14 @@ public class ConfigWindow : Window {
             conf.KeepDeathsForMinutes = keepDeathsFor;
             conf.Save();
         }
+        
+        
+        var bRecordJobsAsSourceInPvp = conf.RecordJobsAsSourceInPvp;
+        if (ImGui.Checkbox("Record job name as damage source in PvP", ref bRecordJobsAsSourceInPvp)) {
+            conf.RecordJobsAsSourceInPvp = bRecordJobsAsSourceInPvp;
+            conf.Save();
+        }
+        RecordJobsAsSourceInPvpTooltip();
     }
 
     private static void ChatMessageTypeTooltip() {
@@ -115,6 +123,12 @@ public class ConfigWindow : Window {
     private static void ChatTipTooltip() {
         if (ImGui.IsItemHovered()) {
             ImGui.SetTooltip("Prints the command in the chat to reopen the window the first time you close the Death Recap.");
+        }
+    }
+
+    private static void RecordJobsAsSourceInPvpTooltip() {
+        if (ImGui.IsItemHovered()) {
+            ImGui.SetTooltip("Uses the job name instead of player name as damage source in PvP.");
         }
     }
 
