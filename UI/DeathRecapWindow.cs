@@ -188,7 +188,7 @@ public class DeathRecapWindow : Window {
         ImGui.TextUnformatted("Player");
         ImGui.SameLine();
         ImGui.SetNextItemWidth(200 * ImGuiHelpers.GlobalScale);
-        if (ImGui.BeginCombo("", selectedPlayerName)) {
+        if (ImGui.BeginCombo("##playerSelection", selectedPlayerName)) {
             var processed = new HashSet<ulong>();
 
             if (Service.PartyList.Length > 0) {
