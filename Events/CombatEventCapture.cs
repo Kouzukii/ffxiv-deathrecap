@@ -2,12 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Dalamud.Game.ClientState.Objects.SubKinds;
-using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Hooking;
 using Dalamud.Utility.Signatures;
 using DeathRecap.Game;
-using Lumina.Excel.Sheets;
+using FFXIVClientStructs.FFXIV.Client.Game;
+using FFXIVClientStructs.FFXIV.Client.Game.Character;
+using FFXIVClientStructs.FFXIV.Client.Game.Object;
+using FFXIVClientStructs.FFXIV.Common.Math;
 using Action = Lumina.Excel.Sheets.Action;
+using Status = Lumina.Excel.Sheets.Status;
 
 namespace DeathRecap.Events;
 
@@ -16,15 +19,15 @@ public class CombatEventCapture : IDisposable {
     private readonly DeathRecapPlugin plugin;
 
     private unsafe delegate void ProcessPacketActionEffectDelegate(
-        int sourceId, IntPtr sourceCharacter, IntPtr pos, ActionEffectHeader* effectHeader, ActionEffect* effectArray, ulong* effectTrail);
+        uint casterEntityId, Character* casterPtr, Vector3* targetPos, ActionEffectHandler.Header* header, ActionEffectHandler.TargetEffects* effects,
+        GameObjectId* targetEntityIds);
 
     private delegate void ProcessPacketActorControlDelegate(
-        uint entityId, uint type, uint statusId, uint amount, uint a5, uint source, uint a7, uint a8, ulong a9, byte flag);
+        uint entityId, ActorControlCategory type, uint param1, uint param2, uint param3, uint param4, uint param5, uint param6, ulong param7, bool isReplay);
 
     private delegate void ProcessPacketEffectResultDelegate(uint targetId, IntPtr actionIntegrityData, bool isReplay);
 
-    [Signature("40 55 53 56 41 54 41 55 41 56 41 57 48 8D AC 24 60 FF FF FF 48 81 EC A0 01 00 00", DetourName = nameof(ProcessPacketActionEffectDetour))]
-    private readonly Hook<ProcessPacketActionEffectDelegate> processPacketActionEffectHook = null!;
+    private readonly Hook<ProcessPacketActionEffectDelegate> processPacketActionEffectHook;
 
     [Signature("E8 ?? ?? ?? ?? 0F B7 0B 83 E9 64", DetourName = nameof(ProcessPacketActorControlDetour))]
     private readonly Hook<ProcessPacketActorControlDelegate> processPacketActorControlHook = null!;
@@ -32,59 +35,70 @@ public class CombatEventCapture : IDisposable {
     [Signature("48 8B C4 44 88 40 18 89 48 08", DetourName = nameof(ProcessPacketEffectResultDetour))]
     private readonly Hook<ProcessPacketEffectResultDelegate> processPacketEffectResultHook = null!;
 
-    public CombatEventCapture(DeathRecapPlugin plugin) {
+    public unsafe CombatEventCapture(DeathRecapPlugin plugin) {
         this.plugin = plugin;
 
         Service.GameInteropProvider.InitializeFromAttributes(this);
 
+        processPacketActionEffectHook =
+            Service.GameInteropProvider.HookFromSignature<ProcessPacketActionEffectDelegate>(ActionEffectHandler.Addresses.Receive.String,
+                ProcessPacketActionEffectDetour);
         processPacketActionEffectHook.Enable();
         processPacketActorControlHook.Enable();
         processPacketEffectResultHook.Enable();
     }
 
     private unsafe void ProcessPacketActionEffectDetour(
-        int sourceId, IntPtr sourceCharacter, IntPtr pos, ActionEffectHeader* effectHeader, ActionEffect* effectArray, ulong* effectTrail) {
-        processPacketActionEffectHook.Original(sourceId, sourceCharacter, pos, effectHeader, effectArray, effectTrail);
+        uint casterEntityId, Character* casterPtr, Vector3* targetPos, ActionEffectHandler.Header* effectHeader, ActionEffectHandler.TargetEffects* effectArray,
+        GameObjectId* targetEntityIds) {
+        processPacketActionEffectHook.Original(casterEntityId, casterPtr, targetPos, effectHeader, effectArray, targetEntityIds);
 
         try {
-            uint targets = effectHeader->EffectCount;
-
-            if (targets == 0)
+            if (effectHeader->NumTargets == 0)
                 return;
 
-            var actionId = effectHeader->EffectDisplayType switch {
-                ActionEffectDisplayType.MountName => 0xD000000 + effectHeader->ActionId,
-                ActionEffectDisplayType.ShowItemName => 0x2000000 + effectHeader->ActionId,
-                _ => effectHeader->ActionAnimationId
+            var actionId = effectHeader->ActionType switch {
+                ActionType.Mount => 0xD000000 + effectHeader->ActionId,
+                ActionType.Item => 0x2000000 + effectHeader->ActionId,
+                _ => effectHeader->SpellId
             };
             Action? action = null;
             string? source = null;
-            IGameObject? gameObject = null;
             List<uint>? additionalStatus = null;
 
-            for (var i = 0; i < targets; i++) {
-                var actionTargetId = (uint)(effectTrail[i] & uint.MaxValue);
+            for (var i = 0; i < effectHeader->NumTargets; i++) {
+                var actionTargetId = (uint)(targetEntityIds[i] & uint.MaxValue);
                 if (!plugin.ConditionEvaluator.ShouldCapture(actionTargetId))
                     continue;
                 if (Service.ObjectTable.SearchById(actionTargetId) is not IPlayerCharacter p)
                     continue;
                 for (var j = 0; j < 8; j++) {
-                    ref var actionEffect = ref effectArray[i * 8 + j];
-                    if (actionEffect.EffectType == 0)
+                    ref var actionEffect = ref effectArray[i].Effects[j];
+                    if (actionEffect.Type == 0)
                         continue;
                     uint amount = actionEffect.Value;
-                    if ((actionEffect.Flags2 & 0x40) == 0x40)
-                        amount += (uint)actionEffect.Flags1 << 16;
+                    if ((actionEffect.Param4 & 0x40) == 0x40)
+                        amount += (uint)actionEffect.Param3 << 16;
 
                     action ??= Service.DataManager.GetExcelSheet<Action>().GetRowOrDefault(actionId);
-                    gameObject ??= Service.ObjectTable.SearchById((uint)sourceId);
-                    source ??= gameObject?.Name.TextValue;
+                    source ??= casterPtr->NameString;
 
-                    switch (actionEffect.EffectType) {
+                    switch ((ActionEffectType)actionEffect.Type) {
                         case ActionEffectType.Miss:
                         case ActionEffectType.Damage:
                         case ActionEffectType.BlockedDamage:
                         case ActionEffectType.ParriedDamage:
+                            if (additionalStatus == null) {
+                                var statusManager = casterPtr->GetStatusManager();
+                                additionalStatus = [];
+                                if (statusManager != null) {
+                                    foreach (ref var status in statusManager->Status) {
+                                        if (status.StatusId is 1203 or 1195 or 1193 or 860 or 1715 or 2115 or 3642)
+                                            additionalStatus.Add(status.StatusId);
+                                    }
+                                }
+                            }
+
                             combatEvents.AddEntry(actionTargetId,
                                 new CombatEvent.DamageTaken {
                                     // 1203 = Addle
@@ -94,12 +108,7 @@ public class CombatEventCapture : IDisposable {
                                     // 1715 = Malodorous, BLU Bad Breath
                                     // 2115 = Conked, BLU Magic Hammer
                                     // 3642 = Candy Cane, BLU Candy Cane
-                                    Snapshot =
-                                        p.Snapshot(true,
-                                            additionalStatus ??= gameObject is IBattleChara b
-                                                ? b.StatusList.Select(s => s.StatusId).Where(s => s is 1203 or 1195 or 1193 or 860 or 1715 or 2115 or 3642)
-                                                    .ToList()
-                                                : []),
+                                    Snapshot = p.Snapshot(true, additionalStatus),
                                     Source = source,
                                     Amount = amount,
                                     Action = action?.ActionCategory.RowId == 1 ? "Auto-attack" : action?.Name.ExtractText() ?? "",
@@ -107,9 +116,9 @@ public class CombatEventCapture : IDisposable {
                                     Crit = (actionEffect.Param0 & 0x20) == 0x20,
                                     DirectHit = (actionEffect.Param0 & 0x40) == 0x40,
                                     DamageType = (DamageType)(actionEffect.Param1 & 0xF),
-                                    Parried = actionEffect.EffectType == ActionEffectType.ParriedDamage,
-                                    Blocked = actionEffect.EffectType == ActionEffectType.BlockedDamage,
-                                    DisplayType = effectHeader->EffectDisplayType
+                                    Parried = actionEffect.Type == (int)ActionEffectType.ParriedDamage,
+                                    Blocked = actionEffect.Type == (int)ActionEffectType.BlockedDamage,
+                                    DisplayType = effectHeader->ActionType
                                 });
                             break;
                         case ActionEffectType.Heal:
@@ -132,8 +141,8 @@ public class CombatEventCapture : IDisposable {
     }
 
     private void ProcessPacketActorControlDetour(
-        uint entityId, uint type, uint statusId, uint amount, uint a5, uint source, uint a7, uint a8, ulong a9, byte flag) {
-        processPacketActorControlHook.Original(entityId, type, statusId, amount, a5, source, a7, a8, a9, flag);
+        uint entityId, ActorControlCategory type, uint param1, uint param2, uint param3, uint param4, uint param5, uint param6, ulong param7, bool flag) {
+        processPacketActorControlHook.Original(entityId, type, param1, param2, param3, param4, param5, param6, param7, flag);
 
         try {
             if (!plugin.ConditionEvaluator.ShouldCapture(entityId))
@@ -142,23 +151,23 @@ public class CombatEventCapture : IDisposable {
             if (Service.ObjectTable.SearchById(entityId) is not IPlayerCharacter p)
                 return;
 
-            switch ((ActorControlCategory)type) {
-                case ActorControlCategory.DoT: combatEvents.AddEntry(entityId, new CombatEvent.DoT { Snapshot = p.Snapshot(), Amount = amount }); break;
+            switch (type) {
+                case ActorControlCategory.DoT: combatEvents.AddEntry(entityId, new CombatEvent.DoT { Snapshot = p.Snapshot(), Amount = param2 }); break;
                 case ActorControlCategory.HoT:
-                    if (statusId != 0) {
+                    if (param1 != 0) {
                         var sourceName = Service.ObjectTable.SearchById(entityId)?.Name.TextValue;
-                        var status = Service.DataManager.GetExcelSheet<Status>().GetRowOrDefault(statusId);
+                        var status = Service.DataManager.GetExcelSheet<Status>().GetRowOrDefault(param1);
                         combatEvents.AddEntry(entityId,
                             new CombatEvent.Healed {
                                 Snapshot = p.Snapshot(),
                                 Source = sourceName,
-                                Amount = amount,
+                                Amount = param2,
                                 Action = status?.Name.ExtractText() ?? "",
                                 Icon = status?.Icon,
-                                Crit = source == 1
+                                Crit = param4 == 1
                             });
                     } else {
-                        combatEvents.AddEntry(entityId, new CombatEvent.HoT { Snapshot = p.Snapshot(), Amount = amount });
+                        combatEvents.AddEntry(entityId, new CombatEvent.HoT { Snapshot = p.Snapshot(), Amount = param2 });
                     }
 
                     break;

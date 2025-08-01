@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 using DeathRecap.Events;
-using DeathRecap.Game;
+using FFXIVClientStructs.FFXIV.Client.Game;
 
 namespace DeathRecap;
 
@@ -176,7 +176,7 @@ internal static class DummyData {
                     Amount = 21445,
                     Action = "Sonic Howl",
                     DamageType = (DamageType)5,
-                    DisplayType = (ActionEffectDisplayType)1,
+                    DisplayType = (ActionType)1,
                     Icon = 405,
                     Snapshot =
                         new CombatEvent.EventSnapshot {
@@ -270,7 +270,7 @@ internal static class DummyData {
                     Amount = 42589,
                     Action = "Ruby Glow",
                     DamageType = (DamageType)5,
-                    DisplayType = (ActionEffectDisplayType)1,
+                    DisplayType = (ActionType)1,
                     Icon = 405,
                     Snapshot =
                         new CombatEvent.EventSnapshot {
@@ -430,7 +430,7 @@ internal static class DummyData {
                     Amount = 41434,
                     Action = "Venom Pool",
                     DamageType = (DamageType)5,
-                    DisplayType = (ActionEffectDisplayType)1,
+                    DisplayType = (ActionType)1,
                     Icon = 405,
                     Snapshot =
                         new CombatEvent.EventSnapshot {
@@ -750,7 +750,7 @@ internal static class DummyData {
                     Amount = 36472,
                     Action = "Double Rush",
                     DamageType = (DamageType)3,
-                    DisplayType = (ActionEffectDisplayType)1,
+                    DisplayType = (ActionType)1,
                     Icon = 405,
                     Snapshot = new CombatEvent.EventSnapshot {
                         Time = DateTime.Parse("2022-09-30T18:10:32.4240217+02:00"),
@@ -1122,7 +1122,7 @@ internal static class DummyData {
                         Action = "Forcible Fire II",
                         DirectHit = true,
                         DamageType = (DamageType)5,
-                        DisplayType = (ActionEffectDisplayType)1,
+                        DisplayType = (ActionType)1,
                         Icon = 405,
                         Snapshot =
                             new CombatEvent.EventSnapshot {
@@ -1314,7 +1314,7 @@ internal static class DummyData {
                         Action = "Forcible Difreeze",
                         DirectHit = true,
                         DamageType = (DamageType)5,
-                        DisplayType = (ActionEffectDisplayType)1,
+                        DisplayType = (ActionType)1,
                         Icon = 405,
                         Snapshot =
                             new CombatEvent.EventSnapshot {
@@ -1574,7 +1574,7 @@ internal static class DummyData {
                         Action = "Forcible Trifire",
                         DirectHit = true,
                         DamageType = (DamageType)5,
-                        DisplayType = (ActionEffectDisplayType)1,
+                        DisplayType = (ActionType)1,
                         Icon = 405,
                         Snapshot =
                             new CombatEvent.EventSnapshot {
@@ -1603,7 +1603,7 @@ internal static class DummyData {
                         Action = "Forcible Failure",
                         DirectHit = true,
                         DamageType = 0,
-                        DisplayType = (ActionEffectDisplayType)1,
+                        DisplayType = (ActionType)1,
                         Icon = 405,
                         Snapshot =
                             new CombatEvent.EventSnapshot {
@@ -1633,7 +1633,7 @@ internal static class DummyData {
                         Action = "Forcible Failure",
                         DirectHit = true,
                         DamageType = 0,
-                        DisplayType = (ActionEffectDisplayType)1,
+                        DisplayType = (ActionType)1,
                         Icon = 405,
                         Snapshot =
                             new CombatEvent.EventSnapshot {

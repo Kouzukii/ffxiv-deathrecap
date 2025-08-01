@@ -8,10 +8,10 @@ using Dalamud.Interface.Textures.TextureWraps;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
 using DeathRecap.Events;
-using DeathRecap.Game;
+using FFXIVClientStructs.FFXIV.Client.Game;
 using ImGuiNET;
-using Lumina.Excel.Sheets;
 using Newtonsoft.Json;
+using Status = Lumina.Excel.Sheets.Status;
 
 namespace DeathRecap.UI;
 
@@ -301,7 +301,7 @@ public class DeathRecapWindow : Window {
                             }
 
                             ImGui.TableNextColumn(); // Ability
-                            if (dt.DisplayType != ActionEffectDisplayType.HideActionName) {
+                            if (dt.DisplayType != ActionType.None) {
                                 if (GetIconImage(dt.Icon) is { } img)
                                     InlineIcon(img);
 
@@ -686,9 +686,7 @@ public class DeathRecapWindow : Window {
         var overkill = 0;
 
         switch (e) {
-            case CombatEvent.Healed h:
-                change = (float)h.Amount / e.Snapshot.MaxHp;
-                break;
+            case CombatEvent.Healed h: change = (float)h.Amount / e.Snapshot.MaxHp; break;
             case CombatEvent.DamageTaken dt:
                 overkill = (int)(dt.Amount - e.Snapshot.CurrentHp);
                 change = -((float)dt.Amount / e.Snapshot.MaxHp);

@@ -1,6 +1,6 @@
 namespace DeathRecap.Game;
 
-public enum ActorControlCategory : ushort {
+public enum ActorControlCategory : uint {
     Death = 0x6,
     CancelAbility = 0xF,
     GainEffect = 0x14,

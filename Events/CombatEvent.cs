@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using DeathRecap.Game;
+using FFXIVClientStructs.FFXIV.Client.Game;
 
 namespace DeathRecap.Events;
 
@@ -46,7 +46,7 @@ public record CombatEvent {
         public bool Crit { get; init; }
         public bool DirectHit { get; init; }
         public required DamageType DamageType { get; init; }
-        public required ActionEffectDisplayType DisplayType { get; init; }
+        public required ActionType DisplayType { get; init; }
         public bool Parried { get; init; }
         public bool Blocked { get; init; }
         public required ushort? Icon { get; init; }
