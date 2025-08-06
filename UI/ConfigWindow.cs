@@ -1,11 +1,12 @@
 using System;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Numerics;
+using Dalamud.Bindings.ImGui;
 using Dalamud.Game.Text;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
 using Dalamud.Utility;
-using ImGuiNET;
 
 namespace DeathRecap.UI;
 
@@ -34,7 +35,7 @@ public class ConfigWindow : Window {
 
             var notificationStyle = (int)v.NotificationStyle;
             ImGui.TextUnformatted("On Death");
-            if (ImGui.Combo("##2", ref notificationStyle, "Do Nothing\0Chat Message\0Show Popup\0Open Recap")) {
+            if (ImGui.Combo("##2", ref notificationStyle, ["Do Nothing", "Chat Message", "Show Popup", "Open Recap"])) {
                 v.NotificationStyle = (NotificationStyle)notificationStyle;
                 conf.Save();
             }
@@ -68,7 +69,7 @@ public class ConfigWindow : Window {
         ImGui.TextUnformatted("Chat Message Type");
         ImGui.SameLine();
         ImGui.SetNextItemWidth(150 * ImGuiHelpers.GlobalScale);
-        if (ImGui.Combo("##3", ref chatType, string.Join('\0', chatTypes.Select(t => t.GetAttribute<XivChatTypeInfoAttribute>()?.FancyName ?? t.ToString())),
+        if (ImGui.Combo("##3", ref chatType, chatTypes.Select(t => t.GetAttribute<XivChatTypeInfoAttribute>()?.FancyName ?? t.ToString()).ToImmutableList(),
                 10)) {
             conf.ChatType = chatTypes[chatType];
             conf.Save();

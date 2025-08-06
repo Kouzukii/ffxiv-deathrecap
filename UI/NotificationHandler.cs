@@ -1,6 +1,7 @@
 using System;
 using System.Numerics;
 using System.Text;
+using Dalamud.Bindings.ImGui;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
@@ -8,7 +9,6 @@ using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
 using DeathRecap.Events;
 using DeathRecap.Game;
-using ImGuiNET;
 
 namespace DeathRecap.UI;
 
@@ -30,10 +30,10 @@ public class NotificationHandler : Window {
         PositionCondition = ImGuiCond.FirstUseEver;
         Position = initialPos = viewportPosition + (viewportSize - Size.Value * ImGuiHelpers.GlobalScale) * .5f;
 
-        chatLinkPayload = Service.PluginInterface.AddChatLinkHandler(0, OnChatLinkClick);
+        chatLinkPayload = Service.ChatGui.AddChatLinkHandler(OnChatLinkClick);
     }
 
-    private void OnChatLinkClick(uint cmdId, SeString msg) {
+    private void OnChatLinkClick(Guid cmdId, SeString msg) {
         if (msg.Payloads is [.., RawPayload p, _] && DeathNotificationPayload.Decode(p) is { } payload
                                                   && plugin.DeathsPerPlayer.TryGetValue(payload.PlayerId, out var deaths)) {
             var selectedDeath = 0;

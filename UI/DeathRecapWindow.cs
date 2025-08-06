@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Textures.TextureWraps;
@@ -9,7 +10,6 @@ using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
 using DeathRecap.Events;
 using FFXIVClientStructs.FFXIV.Client.Game;
-using ImGuiNET;
 using Newtonsoft.Json;
 using Status = Lumina.Excel.Sheets.Status;
 
@@ -571,7 +571,7 @@ public class DeathRecapWindow : Window {
             lastBarPos = pos1.Y;
 
             if (pos2.X - pos1.X > 50) {
-                var textSize = ImGui.CalcTextSize(text, 0, pos2.X - pos1.X);
+                var textSize = ImGui.CalcTextSize(text, false, pos2.X - pos1.X);
                 if (innerPos.Y + innerSize.Y - pos1.Y - innerSize.Y * Math.Abs(changeScaled) < textSize.Y) {
                     drawList.AddTextOutlined(pos1 + new Vector2(pos2.X - pos1.X - textSize.X, -textSize.Y * 2 - 10) * 0.5f, 0xFFFFFFFF, 0xFF000000, text,
                         textSize.X);
@@ -639,7 +639,7 @@ public class DeathRecapWindow : Window {
         // ReSharper disable once PossibleLossOfFraction
         var imgSize = ImGuiHelpers.ScaledVector2(16 * img.Width / img.Height, 16);
         ImGui.Dummy(imgSize);
-        ImGui.GetWindowDrawList().AddImage(img.ImGuiHandle, imgPos, imgPos + imgSize);
+        ImGui.GetWindowDrawList().AddImage(img.Handle, imgPos, imgPos + imgSize);
         ImGui.SameLine(0, paddingRight);
     }
 
