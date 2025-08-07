@@ -1720,9 +1720,11 @@ internal static class DummyData {
                 ]
             });
 
-        plugin.NotificationHandler.DisplayDeath(plugin.DeathsPerPlayer[0][0]);
-        plugin.NotificationHandler.DisplayDeath(plugin.DeathsPerPlayer[0][1]);
-        plugin.Window.IsOpen = true;
+        Service.Framework.RunOnFrameworkThread(() => {
+            plugin.NotificationHandler.DisplayDeath(plugin.DeathsPerPlayer[0][0]);
+            plugin.NotificationHandler.DisplayDeath(plugin.DeathsPerPlayer[0][1]);
+            plugin.Window.IsOpen = true;
+        });
     }
 }
 #endif

@@ -30,10 +30,10 @@ public class NotificationHandler : Window {
         PositionCondition = ImGuiCond.FirstUseEver;
         Position = initialPos = viewportPosition + (viewportSize - Size.Value * ImGuiHelpers.GlobalScale) * .5f;
 
-        chatLinkPayload = Service.ChatGui.AddChatLinkHandler(OnChatLinkClick);
+        chatLinkPayload = Service.ChatGui.AddChatLinkHandler(0, OnChatLinkClick);
     }
 
-    private void OnChatLinkClick(Guid cmdId, SeString msg) {
+    private void OnChatLinkClick(uint cmdId, SeString msg) {
         if (msg.Payloads is [.., RawPayload p, _] && DeathNotificationPayload.Decode(p) is { } payload
                                                   && plugin.DeathsPerPlayer.TryGetValue(payload.PlayerId, out var deaths)) {
             var selectedDeath = 0;
