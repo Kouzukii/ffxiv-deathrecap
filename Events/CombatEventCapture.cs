@@ -23,9 +23,9 @@ public class CombatEventCapture : IDisposable {
         GameObjectId* targetEntityIds);
 
     private delegate void ProcessPacketActorControlDelegate(
-        uint entityId, ActorControlCategory type, uint param1, uint param2, uint param3, uint param4, uint param5, uint param6, ulong param7, bool isReplay);
+        uint entityId, ActorControlCategory type, uint param1, uint param2, uint param3, uint param4, uint param5, uint param6, ulong param7, byte isReplay);
 
-    private delegate void ProcessPacketEffectResultDelegate(uint targetId, IntPtr actionIntegrityData, bool isReplay);
+    private delegate void ProcessPacketEffectResultDelegate(uint targetId, IntPtr actionIntegrityData, byte isReplay);
 
     private readonly Hook<ProcessPacketActionEffectDelegate> processPacketActionEffectHook;
 
@@ -141,8 +141,8 @@ public class CombatEventCapture : IDisposable {
     }
 
     private void ProcessPacketActorControlDetour(
-        uint entityId, ActorControlCategory type, uint param1, uint param2, uint param3, uint param4, uint param5, uint param6, ulong param7, bool flag) {
-        processPacketActorControlHook.Original(entityId, type, param1, param2, param3, param4, param5, param6, param7, flag);
+        uint entityId, ActorControlCategory type, uint param1, uint param2, uint param3, uint param4, uint param5, uint param6, ulong param7, byte isReplay) {
+        processPacketActorControlHook.Original(entityId, type, param1, param2, param3, param4, param5, param6, param7, isReplay);
 
         try {
             if (!plugin.ConditionEvaluator.ShouldCapture(entityId))
@@ -186,7 +186,7 @@ public class CombatEventCapture : IDisposable {
         }
     }
 
-    private unsafe void ProcessPacketEffectResultDetour(uint targetId, IntPtr actionIntegrityData, bool isReplay) {
+    private unsafe void ProcessPacketEffectResultDetour(uint targetId, IntPtr actionIntegrityData, byte isReplay) {
         processPacketEffectResultHook.Original(targetId, actionIntegrityData, isReplay);
 
         try {
