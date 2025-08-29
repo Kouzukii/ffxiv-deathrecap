@@ -49,7 +49,7 @@ public record CombatEvent {
         public required ActionType DisplayType { get; init; }
         public bool Parried { get; init; }
         public bool Blocked { get; init; }
-        public required ushort? Icon { get; init; }
+        public required uint? Icon { get; init; }
     }
 
     public record Healed : CombatEvent {
@@ -58,5 +58,13 @@ public record CombatEvent {
         public required string Action { get; init; }
         public bool Crit { get; init; }
         public required uint? Icon { get; init; }
+    }
+
+    public record MedKit : CombatEvent {
+        public required uint Amount { get; init; }
+    }
+
+    public record FallDamage : CombatEvent {
+        public required uint Amount { get; init; }
     }
 }

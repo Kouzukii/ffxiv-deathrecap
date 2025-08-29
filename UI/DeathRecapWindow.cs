@@ -381,6 +381,46 @@ public class DeathRecapWindow : Window {
                             DrawStatusEffectsColumn(s);
                             break;
                         }
+                        case CombatEvent.MedKit mk: {
+                                if (!plugin.Configuration.EventFilter.HasFlag(EventFilter.Healing))
+                                    continue;
+                                ImGui.TableNextRow();
+                                DrawTimeColumn(mk, death.TimeOfDeath);
+
+                                ImGui.TableNextColumn(); // Amount
+                                ImGui.AlignTextToFramePadding();
+                                ImGuiHelper.TextColored(ColorHealingText, $"+{mk.Amount:N0}");
+
+                                ImGui.TableNextColumn(); // Ability
+                                ImGui.AlignTextToFramePadding();
+                                ImGui.TextUnformatted("Medicinal Kit");
+
+                                ImGui.TableNextColumn(); // Source
+
+                                DrawHpColumn(mk);
+                                break;
+                        }
+                        case CombatEvent.FallDamage fd: {
+                                if (!plugin.Configuration.EventFilter.HasFlag(EventFilter.Damage))
+                                    continue;
+                                ImGui.TableNextRow();
+
+                                DrawTimeColumn(fd, death.TimeOfDeath);
+
+                                ImGui.TableNextColumn(); // Amount
+                                ImGui.AlignTextToFramePadding();
+                                var text = $"-{fd.Amount:N0}";
+                                ImGuiHelper.TextColored(ColorDamage, text);
+
+                                ImGui.TableNextColumn(); // Ability
+                                ImGui.AlignTextToFramePadding();
+                                ImGui.TextUnformatted("Fall Damage");
+
+                                ImGui.TableNextColumn(); // Source
+
+                                DrawHpColumn(fd);
+                                break;
+                            }
                     }
 
             ImGui.EndTable();
@@ -467,6 +507,17 @@ public class DeathRecapWindow : Window {
                     text = "DoT";
                     numCol = ColorDamage;
                     break;
+                case CombatEvent.MedKit mk:
+                    change = mk.Amount;
+                    pntCur.Y -= change * invYScale;
+                    text = "MedKit";
+                    numCol = ColorHealingText;
+                    break;
+                case CombatEvent.FallDamage fd:
+                    change = -fd.Amount;
+                    text = "Fall Damage";
+                    numCol = ColorDamage;
+                    break;
             }
 
             var changeScaled = (float)change / yScaleMax;
@@ -524,6 +575,20 @@ public class DeathRecapWindow : Window {
                         ImGuiHelper.TextColored(numCol, $"{hot.Amount:N0}");
                         ImGui.SameLine(0, 4);
                         ImGui.TextUnformatted("HP from healing over time effect.");
+                        break;
+                    case CombatEvent.MedKit mk:
+                        ImGui.TextUnformatted("Healed for");
+                        ImGui.SameLine(0, 4);
+                        ImGuiHelper.TextColored(numCol, $"{mk.Amount:N0}");
+                        ImGui.SameLine(0, 4);
+                        ImGui.TextUnformatted("HP from a medicinal kit.");
+                        break;
+                    case CombatEvent.FallDamage fd:
+                        ImGui.TextUnformatted("Took");
+                        ImGui.SameLine(0, 4);
+                        ImGuiHelper.TextColored(numCol, $"{fd.Amount:N0}");
+                        ImGui.SameLine(0, 4);
+                        ImGui.TextUnformatted("damage from falling.");
                         break;
                 }
 
@@ -686,6 +751,7 @@ public class DeathRecapWindow : Window {
         var overkill = 0;
 
         switch (e) {
+            case CombatEvent.MedKit mk: change = (float)mk.Amount / e.Snapshot.MaxHp; break;
             case CombatEvent.Healed h: change = (float)h.Amount / e.Snapshot.MaxHp; break;
             case CombatEvent.DamageTaken dt:
                 overkill = (int)(dt.Amount - e.Snapshot.CurrentHp);
@@ -694,6 +760,10 @@ public class DeathRecapWindow : Window {
             case CombatEvent.DoT dot:
                 overkill = (int)(dot.Amount - e.Snapshot.CurrentHp);
                 change = -((float)dot.Amount / e.Snapshot.MaxHp);
+                break;
+            case CombatEvent.FallDamage fd:
+                overkill = (int)(fd.Amount - e.Snapshot.CurrentHp);
+                change = -((float)fd.Amount / e.Snapshot.MaxHp);
                 break;
         }
 

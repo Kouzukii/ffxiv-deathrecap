@@ -66,11 +66,13 @@ public class CombatEventCapture : IDisposable {
             string? source = null;
             List<uint>? additionalStatus = null;
 
+            var casterObj = Service.ObjectTable.SearchById(casterEntityId);
+
             for (var i = 0; i < effectHeader->NumTargets; i++) {
                 var actionTargetId = (uint)(targetEntityIds[i] & uint.MaxValue);
-                if (!plugin.ConditionEvaluator.ShouldCapture(actionTargetId))
-                    continue;
-                if (Service.ObjectTable.SearchById(actionTargetId) is not IPlayerCharacter p)
+                //if (!plugin.ConditionEvaluator.ShouldCapture(actionTargetId))
+                //    continue;
+                if (Service.ObjectTable.SearchById(actionTargetId) is not IPlayerCharacter targetObj)
                     continue;
                 for (var j = 0; j < 8; j++) {
                     ref var actionEffect = ref effectArray[i].Effects[j];
@@ -83,12 +85,26 @@ public class CombatEventCapture : IDisposable {
                     action ??= Service.DataManager.GetExcelSheet<Action>().GetRowOrDefault(actionId);
                     source ??= casterPtr->NameString;
 
+                    IPlayerCharacter p = targetObj;
+                    //check for reflected damage and healing onto the caster (lifesteal, thorns)
+                    bool isReflected = (actionEffect.Param4 & 0x80) == 0x80;
+                    if(isReflected) {
+                        if (casterObj is not IPlayerCharacter) {
+                            continue;
+                        } else {
+                            p = casterObj as IPlayerCharacter;
+                        }
+                    }
+
+                    if (!plugin.ConditionEvaluator.ShouldCapture(p.EntityId))
+                        continue;
+
                     switch ((ActionEffectType)actionEffect.Type) {
                         case ActionEffectType.Miss:
                         case ActionEffectType.Damage:
                         case ActionEffectType.BlockedDamage:
                         case ActionEffectType.ParriedDamage:
-                            if (additionalStatus == null) {
+                            if (!isReflected && additionalStatus == null) {
                                 var statusManager = casterPtr->GetStatusManager();
                                 additionalStatus = [];
                                 if (statusManager != null) {
@@ -99,7 +115,7 @@ public class CombatEventCapture : IDisposable {
                                 }
                             }
 
-                            combatEvents.AddEntry(actionTargetId,
+                            combatEvents.AddEntry(p.EntityId,
                                 new CombatEvent.DamageTaken {
                                     // 1203 = Addle
                                     // 1195 = Feint
@@ -122,7 +138,7 @@ public class CombatEventCapture : IDisposable {
                                 });
                             break;
                         case ActionEffectType.Heal:
-                            combatEvents.AddEntry(actionTargetId,
+                            combatEvents.AddEntry(p.EntityId,
                                 new CombatEvent.Healed {
                                     Snapshot = p.Snapshot(true),
                                     Source = source,
@@ -152,10 +168,29 @@ public class CombatEventCapture : IDisposable {
                 return;
 
             switch (type) {
-                case ActorControlCategory.DoT: combatEvents.AddEntry(entityId, new CombatEvent.DoT { Snapshot = p.Snapshot(), Amount = param2 }); break;
+                case ActorControlCategory.DoT:
+                    if (param1 != 0) {
+                        var sourceName = Service.ObjectTable.SearchById(param3)?.Name.TextValue;
+                        var status = Service.DataManager.GetExcelSheet<Status>().GetRowOrDefault(param1);
+                        combatEvents.AddEntry(entityId,
+                            new CombatEvent.DamageTaken {
+                                Snapshot = p.Snapshot(),
+                                Source = sourceName,
+                                Amount = param2,
+                                Action = status?.Name.ExtractText() ?? "",
+                                Icon = (status?.Icon),
+                                Crit = param4 == 1,
+                                DamageType = DamageType.Unknown, //not sure if status DoTs have a damage type
+                                DisplayType = ActionType.Action, //not applicable
+                            });
+                    }
+                    else {
+                        combatEvents.AddEntry(entityId, new CombatEvent.DoT { Snapshot = p.Snapshot(), Amount = param2 });
+                    }
+                    break;
                 case ActorControlCategory.HoT:
                     if (param1 != 0) {
-                        var sourceName = Service.ObjectTable.SearchById(entityId)?.Name.TextValue;
+                        var sourceName = Service.ObjectTable.SearchById(param3)?.Name.TextValue;
                         var status = Service.DataManager.GetExcelSheet<Status>().GetRowOrDefault(param1);
                         combatEvents.AddEntry(entityId,
                             new CombatEvent.Healed {
@@ -170,6 +205,20 @@ public class CombatEventCapture : IDisposable {
                         combatEvents.AddEntry(entityId, new CombatEvent.HoT { Snapshot = p.Snapshot(), Amount = param2 });
                     }
 
+                    break;
+                case ActorControlCategory.MedKit:
+                    combatEvents.AddEntry(entityId,
+                    new CombatEvent.MedKit {
+                        Snapshot = p.Snapshot(),
+                        Amount = param2,
+                    });
+                    break;
+                case ActorControlCategory.FallDamage:
+                    combatEvents.AddEntry(entityId,
+                    new CombatEvent.FallDamage {
+                        Snapshot = p.Snapshot(),
+                        Amount = param1,
+                    });
                     break;
                 case ActorControlCategory.Death: {
                     if (combatEvents.Remove(entityId, out var events)) {
